@@ -1,0 +1,14 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Usuário autenticado e empresaId igual
+    match /{collection}/{docId} {
+      allow read, write: if request.auth != null &&
+        request.auth.token.empresaId == resource.data.empresaId;
+    }
+    // Usuários: só o próprio pode ler/editar
+    match /usuarios/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

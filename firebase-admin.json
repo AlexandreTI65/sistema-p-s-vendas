@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "sistema-pos-vendas",
+  "private_key_id": "de0ce705f2def176dec2dcd1b0dcb7b1422ebd10",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDEL1ppgr9Dr2AY\nQoZiQ23lIq7UC1NxaE5A1KDhERSYfpNE0vElfTlzZEkvOX2LBAbe3HfdjSu+Ad5Y\nHOaY7v3puA0kDw/XXbh7Z2A8e+IO/eXxe8zMy0VNu9pIev+JWl4nKj0gjaKAX6Ia\npvWPtFrQv9KAkO0704ab8W+VJt1onfk+8esO/U6cfcOrKSZqKHSqxohSKuq2GDdB\nrHazfeeDcb4m2tcK8uExo237Dwa2X7wtevlIEx/tyXKbLlM8+UEZUd43rGxjRlxx\nFmn0yYx+KZHOg0w1MKltW/LNOWwZixn0YRxWcqkspKFFXSsy5Dk59dHsVw1KG6AK\nfLlCTt9hAgMBAAECggEAFYGcvLJLkKTvY4QaF+Lib4Wk0AlJ0BsqG5Xzk5imvwIp\nLMNJvN1Zve+WzOmAJ2F9S1MJ2iy5SIQLQXIxnpRHG3xEsdjrg1AlLXSrVRYTivyE\nXOZAZjbmVbDWgK7ocmszT8HOn6dHKCF+Xhjtacp7UM+mc4JFBL5EebXhkI0zz7Lz\nHixjrtgXgZwCvoaLRuHJIx+Jg2dMP4y705Jfd4BaR9d46m6oXu9akAvFeODA6ilp\ni+qaIRstBg/LG2LyB78scBFMlqCG+PAJo85dxtkn4TWfC7KK/qpUcNTtx9Z4bw1c\nPKEXG+S0K8FUxZB3ycRciTWLFLbd3Rxbv+htcxkvnQKBgQDq/Y+ytmgvty+sK4sk\nqOFtrkQ9DuKogjfA5usLjHRBmmxkVlUA+IyH9cXC7xo0pDX1KSL1VUVvQ7TjnSdK\nPeVaeXuJqNwhiNgpNsdHM6E2yoAi9Cc9i5CYJ3Fc7F6l75n05LXmspnSh1T3Mnas\n6UhuoT+YI3XFF5htM5Vq5GjHWwKBgQDVuZ2K3Stcbs59LR3IQ32LlJEkZq89H9oF\n6Ms3XsY229VluCo7BecDiK3Oa0piDi80O4i/e+KN+RjmWKoQwGpmSgSzgsP6RS/V\nYDLht2uViAp9DB44mGclUSCqoxHaaJefyC1Z1PrXjkxO1UU0k/s60gff4pXQdYS/\nZwuCK6Is8wKBgFeW47UNYJBIi7B1GowzlrM3PaA0qC9/OiDg8cOAOuUpFjXgKBcQ\njfEvnuMmFHKCssoK50ji29q5NfeRYE+/+nlaxr1s/4BQbaIPFQBpMjImENT2hJng\nJ6lPKmYkhLL9ODmb9mFjOQrL/tOVL78LxT/XQskGjqNERECP9aW+NX/5AoGADoCU\n1xpg2dnO+yF3luI1f6YqHx00oOIraiE8wNoWexx5o3hWrUCeR1gb6xjOqE6sF1A+\n3DdszRNtBBxaFd7omV5GaWPjJnVRZJotebF3hGMByzBqUI7O2PJjVBDSok5ck4QC\nx8iy6LOILAU+t+2eq4Qa8q8uWUHQKyiz2DZbv88CgYB6YAJzfuBBtUj07+FqLuFJ\nPfg/uwW01vksr3GiDo1OS2woWAZYJZxoqM+Y9P7wRK6NujQSs6AzUCdoJ/Uqz88D\nKUyG/uehStjD75I+ZupLeuACAwWVXZ9oFXOb/9/zXI/A40utuGOi5kjUE8rlQ9IM\ncvG3ZuAyR5rXNzDcDlMFKA==\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@sistema-pos-vendas.iam.gserviceaccount.com",
+  "client_id": "108903236882697172449",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40sistema-pos-vendas.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

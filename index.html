@@ -1,0 +1,3067 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://fonts.googleapis.com https://fonts.gstatic.com 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://ui-avatars.com https://randomuser.me https://www.gstatic.com https://upload.wikimedia.org; connect-src 'self' https://firestore.googleapis.com https://www.googleapis.com https://firebase.googleapis.com https://www.gstatic.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com http://localhost:4000 http://localhost:3030;">
+  <title>DOUDGE PÓS-VENDAS</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Firebase App (core) -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <style>
+    :root {
+      --cor-destaque: #1976d2;
+      --cor-destaque-escura: #115293;
+      --cor-fundo: #f6f8fc;
+      --cor-card: #fff;
+      --cor-glass: rgba(255,255,255,0.75);
+      --cor-glass-dark: rgba(30,40,60,0.82);
+      --sombra-card: 0 8px 32px #1976d233, 0 2px 8px #0001;
+      --sombra-hover: 0 12px 32px #1976d244, 0 2px 8px #0002;
+      --borda-radius: 18px;
+      --fonte: 'Montserrat', 'Roboto', 'Segoe UI', Arial, sans-serif;
+      --fonte-titulo: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+      --fonte-padrao: 'Roboto', 'Segoe UI', Arial, sans-serif;
+      --tam-fonte: 1.08em;
+    }
+    /* ...demais estilos existentes... */
+  </style>
+</head>
+<body>
+<script>console.log('[DEBUG] index.html carregado:', document.location.pathname);</script>
+<!-- TELA DE LOGIN INÍCIO -->
+<div id="login-container" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:100000;background:linear-gradient(120deg,#6a82fb 60%,#fc5c7d 100%);display:flex;align-items:center;justify-content:center;">
+  <form id="login-form" style="background:#fff;border-radius:18px;box-shadow:0 8px 32px #1976d288,0 2px 8px #0002;padding:44px 38px 32px 38px;max-width:370px;width:96vw;display:flex;flex-direction:column;align-items:center;position:relative;">
+  <button id="btn-sair-login" type="button" style="position:absolute;top:12px;right:12px;background:#e53935;color:#fff;border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:1.3em;cursor:pointer;box-shadow:0 2px 8px #e5393522;" title="Sair do sistema">&#10006;</button>
+    <h2 style="font-family:'Montserrat',Arial,sans-serif;font-weight:700;font-size:2.1em;margin-bottom:22px;color:#232a3a;">Login</h2>
+    <div style="width:100%;margin-bottom:18px;">
+      <label style="font-size:1.08em;color:#232a3a;font-weight:600;">Usuário</label>
+      <div style="display:flex;align-items:center;background:#f6f8fc;border-radius:8px;padding:7px 12px;margin-top:4px;">
+        <span style="margin-right:8px;color:#1976d2;font-size:1.2em;">&#128100;</span>
+        <input id="login-usuario" type="email" placeholder="Digite seu e-mail" required style="border:none;background:transparent;outline:none;font-size:1.08em;width:100%;">
+      </div>
+    </div>
+    <div style="width:100%;margin-bottom:10px;">
+      <label style="font-size:1.08em;color:#232a3a;font-weight:600;">Senha</label>
+      <div style="display:flex;align-items:center;background:#f6f8fc;border-radius:8px;padding:7px 12px;margin-top:4px;">
+        <span style="margin-right:8px;color:#1976d2;font-size:1.2em;">&#128274;</span>
+        <input id="login-senha" type="password" placeholder="Digite sua senha" required style="border:none;background:transparent;outline:none;font-size:1.08em;width:100%;">
+      </div>
+    </div>
+    <div style="width:100%;text-align:right;margin-bottom:18px;">
+      <a href="#" id="login-forgot" style="color:#1976d2;font-size:0.98em;text-decoration:none;">Esqueceu a senha?</a>
+      <script>
+// Botão para deslogar e voltar para tela de login
+document.addEventListener('DOMContentLoaded', function() {
+  var btnVoltar = document.getElementById('btn-voltar-login');
+  if (btnVoltar) {
+    btnVoltar.onclick = function() {
+      if (window.firebase && window.firebase.auth) {
+        window.firebase.auth().signOut().then(function() {
+          var loginContainer = document.getElementById('login-container');
+          var sistema = document.getElementById('sistema-pos-vendas');
+          if (loginContainer) loginContainer.style.display = 'flex';
+          if (sistema) sistema.style.display = 'none';
+        });
+      } else {
+        // fallback: só mostra login
+        var loginContainer = document.getElementById('login-container');
+        var sistema = document.getElementById('sistema-pos-vendas');
+        if (loginContainer) loginContainer.style.display = 'flex';
+        if (sistema) sistema.style.display = 'none';
+      }
+    };
+  }
+});
+// Botão sair do login fecha o app Electron
+document.addEventListener('DOMContentLoaded', function() {
+  var btnSair = document.getElementById('btn-sair-login');
+  if (btnSair && window.require) {
+    btnSair.onclick = function() {
+      const { remote, app, ipcRenderer } = window.require('electron');
+      if (remote && remote.app) {
+        remote.app.quit();
+      } else if (app && app.quit) {
+        app.quit();
+      } else if (ipcRenderer) {
+        ipcRenderer.send('app-quit');
+      } else {
+        window.close();
+      }
+    };
+  }
+});
+      document.addEventListener('DOMContentLoaded', function() {
+        var forgot = document.getElementById('login-forgot');
+        if (forgot) {
+          forgot.onclick = function(e) {
+            e.preventDefault();
+            window.open('https://account.live.com/password/reset', '_blank');
+          };
+        }
+      });
+      </script>
+    </div>
+    <button type="submit" style="width:100%;background:linear-gradient(90deg,#6a82fb 60%,#fc5c7d 100%);color:#fff;font-weight:bold;font-size:1.15em;padding:10px 0;border:none;border-radius:24px;box-shadow:0 2px 8px #1976d244;cursor:pointer;transition:background 0.18s;">LOGIN</button>
+    <div style="margin:18px 0 8px 0;font-size:1.05em;color:#888;">Ou entre usando</div>
+    <div style="display:flex;gap:16px;margin-bottom:18px;">
+      <!-- Google Login -->
+      <button id="btn-google-login" type="button" title="Entrar com Google" style="background:#fff;border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px #0001;cursor:pointer;transition:filter 0.2s;">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width:28px;height:28px;" />
+      </button>
+      <!-- Microsoft Login -->
+      <button id="btn-microsoft-login" type="button" title="Entrar com Microsoft" style="background:#fff;border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px #0001;cursor:pointer;transition:filter 0.2s;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="Microsoft" style="width:28px;height:28px;" />
+      </button>
+    </div>
+<script>
+// Login Google OAuth2 via Electron + Firebase
+window.addEventListener('DOMContentLoaded', function() {
+  const btnGoogle = document.getElementById('btn-google-login');
+  if (btnGoogle) {
+    btnGoogle.disabled = false;
+    btnGoogle.style.filter = '';
+    btnGoogle.onclick = function() {
+      if (typeof window.loginGoogle === 'function') {
+        window.loginGoogle();
+      } else {
+        alert('Função de login Google não carregada.');
+      }
+    };
+  }
+  // Login Microsoft OAuth2 via Electron + Firebase
+  const btnMicrosoft = document.getElementById('btn-microsoft-login');
+  if (btnMicrosoft) {
+    btnMicrosoft.disabled = false;
+    btnMicrosoft.style.filter = '';
+    btnMicrosoft.onclick = function() {
+      if (typeof window.loginMicrosoft === 'function') {
+        window.loginMicrosoft();
+      } else {
+        alert('Função de login Microsoft não carregada.');
+      }
+    };
+  }
+});
+</script>
+    <div style="margin-top:8px;font-size:1.05em;color:#888;">Ou cadastre-se</div>
+    <a href="#" id="login-signup" style="color:#1976d2;font-weight:bold;font-size:1.08em;text-decoration:none;margin-top:2px;">CRIAR CONTA</a>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var btnSignup = document.getElementById('login-signup');
+      if (btnSignup) {
+        btnSignup.onclick = function(e) {
+          e.preventDefault();
+          // Abre a página oficial de criação de conta Microsoft no navegador externo
+          if (window.require) {
+            const { shell } = window.require('electron');
+            shell.openExternal('https://signup.live.com/');
+          } else {
+            window.open('https://signup.live.com/', '_blank');
+          }
+        };
+      }
+      var forgot = document.getElementById('login-forgot');
+      if (forgot) {
+        forgot.onclick = function(e) {
+          e.preventDefault();
+          // Abre a página de recuperação de senha Microsoft no navegador externo
+          if (window.require) {
+            const { shell } = window.require('electron');
+            shell.openExternal('https://account.live.com/password/reset');
+          } else {
+            window.open('https://account.live.com/password/reset', '_blank');
+          }
+        };
+      }
+    });
+    </script>
+    <div id="login-erro" style="color:#e53935;font-weight:bold;margin-top:18px;display:none;"></div>
+  </form>
+</div>
+<!-- TELA DE LOGIN FIM -->
+<div id="sistema-pos-vendas">
+<!-- Chatbot flutuante -->
+<div id="chatbotWidget" style="position:fixed;right:32px;bottom:84px;z-index:99999;">
+  <div id="chatbotBox" style="width:340px;max-width:96vw;background:rgba(255,255,255,0.98);border-radius:18px;box-shadow:0 4px 32px #1976d288,0 2px 8px #0002;overflow:hidden;display:none;flex-direction:column;">
+    <div style="background:linear-gradient(90deg,#1976d2 60%,#43a047 100%);color:#fff;padding:10px 16px 10px 12px;font-weight:bold;font-size:1.15em;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <span style="display:flex;align-items:center;gap:8px;">
+        <span style="display:inline-block;width:32px;height:32px;vertical-align:middle;">
+          <svg viewBox="0 0 40 40" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="10" width="28" height="18" rx="8" fill="#f3f4f6" stroke="#1976d2" stroke-width="2"/>
+            <ellipse cx="20" cy="10" rx="6" ry="3" fill="#1976d2"/>
+            <rect x="12" y="16" width="16" height="8" rx="4" fill="#222"/>
+            <ellipse cx="16" cy="20" rx="1.2" ry="1.5" fill="#38bdf8"/>
+            <ellipse cx="24" cy="20" rx="1.2" ry="1.5" fill="#38bdf8"/>
+            <rect x="18" y="23" width="4" height="1.2" rx="0.6" fill="#38bdf8"/>
+            <rect x="8" y="14" width="2" height="6" rx="1" fill="#43a047"/>
+            <rect x="30" y="14" width="2" height="6" rx="1" fill="#43a047"/>
+            <rect x="17" y="6" width="6" height="3" rx="1.5" fill="#ffd600"/>
+          </svg>
+        </span>
+        Chatbot Doudge
+      </span>
+  <button onclick="document.getElementById('chatbotBox').style.display='none'" style="background:none;border:none;color:#fff;font-size:1.1em;cursor:pointer;padding:2px 8px;line-height:1;">×</button>
+    </div>
+    <div id="chatbotMessages" style="flex:1;min-height:120px;max-height:260px;overflow-y:auto;padding:12px 10px 8px 10px;background:#f5f7fa;"></div>
+    <form id="chatbotForm" style="display:flex;gap:6px;padding:10px;background:#f5f7fa;border-top:1px solid #eee;" onsubmit="enviarMsgChatbot(event)">
+      <input id="chatbotInput" type="text" placeholder="Digite sua dúvida..." autocomplete="off" style="flex:1;padding:8px 12px;border-radius:8px;border:1.5px solid #1976d2;font-size:1em;">
+      <button type="submit" style="background:#1976d2;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-weight:bold;cursor:pointer;">Enviar</button>
+    </form>
+  </div>
+  <button id="btnAbrirChatbot" onclick="abrirChatbot()" class="btn-chatbot-sutil">
+    <span style="display:block;width:38px;height:38px;">
+      <svg viewBox="0 0 64 64" width="38" height="38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="32" cy="32" rx="28" ry="22" fill="#fff"/>
+        <path d="M8 32c0-13 24-22 40-12 8 5 8 17 0 22-7 4-19 4-28 2l-8 6 2-8C10 38 8 35 8 32Z" fill="#2563eb"/>
+        <ellipse cx="32" cy="30" rx="14" ry="13" fill="#f4f6fa"/>
+        <rect x="20" y="18" width="24" height="20" rx="10" fill="#e5e7eb"/>
+        <ellipse cx="32" cy="28" rx="10" ry="9" fill="#fff"/>
+        <rect x="24" y="22" width="16" height="12" rx="6" fill="#222"/>
+        <ellipse cx="28" cy="28" rx="2" ry="2.2" fill="#38bdf8"/>
+        <ellipse cx="36" cy="28" rx="2" ry="2.2" fill="#38bdf8"/>
+        <rect x="29" y="32" width="6" height="2" rx="1" fill="#38bdf8"/>
+        <rect x="18" y="24" width="4" height="8" rx="2" fill="#a3a3a3"/>
+        <rect x="42" y="24" width="4" height="8" rx="2" fill="#a3a3a3"/>
+        <rect x="28" y="16" width="8" height="3" rx="1.5" fill="#38bdf8"/>
+      </svg>
+    </span>
+  </button>
+<style>
+.btn-chatbot-sutil {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.45);
+  box-shadow: 0 2px 12px #1976d244;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: box-shadow 0.18s, transform 0.18s, background 0.18s;
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(1.5px) saturate(1.1);
+}
+.btn-chatbot-sutil:hover {
+  background: rgba(25,118,210,0.12);
+  box-shadow: 0 6px 24px #1976d288;
+  transform: scale(1.07);
+}
+  </style>
+</div>
+<script>
+// Consultar consertos do Firebase e exibir miniaturas
+async function consultarConsertosAcao() {
+  const corpo = document.getElementById('corpoTabelaConsertos');
+  corpo.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#1976d2;">Carregando...</td></tr>';
+  try {
+    const db = firebase.firestore();
+    const snap = await db.collection('ferramentasConserto').orderBy('dataCadastro', 'desc').get();
+    if (snap.empty) {
+      corpo.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#e53935;">Nenhum conserto encontrado.</td></tr>';
+      return;
+    }
+    let html = '';
+    window._consertosCache = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    snap.forEach(doc => {
+      const d = doc.data();
+      html += `<div style='display:flex;flex-direction:column;align-items:flex-start;gap:4px;background:#f5f7fa;border:2px solid #1976d2;border-radius:10px;padding:8px 10px;margin:6px 6px 6px 0;box-shadow:0 1px 4px #1976d222;min-width:120px;max-width:150px;position:relative;'>
+  <span onclick='mostrarDetalheConserto("${doc.id}")' style='font-weight:bold;font-size:0.93em;color:#1976d2;text-transform:uppercase;cursor:pointer;'>${d.empresa || '-'}</span>
+        <span onclick='mostrarDetalheConserto("${doc.id}")' style='font-size:0.95em;color:#232a3a;word-break:break-all;cursor:pointer;'>CNPJ: ${d.cnpj || '-'}</span>
+        <button onclick='event.stopPropagation();excluirConsertoFirebase("${doc.id}")' style='position:absolute;top:4px;right:4px;background:#e53935;color:#fff;border:none;border-radius:4px;padding:0 6px;font-size:0.78em;line-height:1.2;cursor:pointer;min-height:18px;'>✖</button>
+      </div>`;
+    });
+    corpo.innerHTML = `<tr><td style='border:none;padding:0;background:none;'><div style='display:flex;flex-wrap:wrap;gap:6px;'>${html}</div></td></tr>`;
+// Excluir conserto do Firebase (global)
+window.excluirConsertoFirebase = async function(id) {
+  if (!confirm('Tem certeza que deseja excluir este conserto?')) return;
+  try {
+    await firebase.firestore().collection('ferramentasConserto').doc(id).delete();
+    consultarConsertosAcao();
+  } catch (e) {
+    alert('Erro ao excluir do banco de dados.');
+  }
+}
+    window._consertosCache = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (e) {
+    corpo.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#e53935;">Erro ao consultar consertos.</td></tr>';
+  }
+}
+
+// Exibir detalhes completos do conserto em modal
+function mostrarDetalheConserto(id) {
+  const c = (window._consertosCache||[]).find(x => x.id === id);
+  if (!c) return;
+  let html = `<div style='padding:18px 12px 8px 12px;max-width:380px;'>
+    <h3 style='margin-top:0;color:#1976d2;'>Detalhes do Conserto</h3>
+    <div style='margin-bottom:8px;'><b>Empresa:</b> ${c.empresa||'-'}</div>
+    <div style='margin-bottom:8px;'><b>CNPJ:</b> ${c.cnpj||'-'}</div>
+    <div style='margin-bottom:8px;'><b>Produto:</b> ${c.produto||'-'}</div>
+    <div style='margin-bottom:8px;'><b>Descrição do Defeito:</b> ${c.defeito||'-'}</div>
+    <div style='margin-bottom:8px;'><b>Data de Cadastro:</b> ${(c.dataCadastro||'').replace('T',' ').slice(0,16).split('-').reverse().join('/')}</div>
+    <button onclick='fecharModalConserto()' style='margin-top:12px;background:#1976d2;color:#fff;padding:7px 18px;border:none;border-radius:8px;cursor:pointer;'>Fechar</button>
+  </div>`;
+  let modal = document.getElementById('modalDetalheConserto');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modalDetalheConserto';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100vw';
+    modal.style.height = '100vh';
+    modal.style.background = 'rgba(0,0,0,0.32)';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.zIndex = '99999';
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `<div style='background:#fff;border-radius:14px;box-shadow:0 4px 32px #1976d288;padding:0;max-width:400px;width:96vw;'>${html}</div>`;
+  modal.onclick = function(e){ if(e.target===modal) fecharModalConserto(); };
+  modal.style.display = 'flex';
+}
+function fecharModalConserto() {
+  const modal = document.getElementById('modalDetalheConserto');
+  if (modal) modal.style.display = 'none';
+}
+// Salvar conserto no Firestore
+async function registrarConsertoAcao() {
+  const empresa = document.getElementById('empresaConserto').value.trim();
+  const cnpj = document.getElementById('cnpjConserto').value.trim();
+  const produto = document.getElementById('produtoConserto').value.trim();
+  const defeito = document.getElementById('defeitoConserto').value.trim();
+  const msgDiv = document.getElementById('mensagemConserto');
+  msgDiv.textContent = '';
+  if (!empresa || !cnpj || !produto || !defeito) {
+    exibirRespostaComDelay('Preencha todos os campos obrigatórios!');
+    return;
+  }
+  // Pergunta sobre motivação e frases
+  if (/motiva[cç][aã]o|frase motivacional|me motive|inspira/i.test(msg)) {
+    const motiv = [
+      'O sucesso é a soma de pequenos esforços repetidos todos os dias! 💡',
+      'Acredite no seu potencial e vá além!',
+      'Cada desafio é uma oportunidade de crescer.'
+      // ...existing code...
+    ];
+    exibirRespostaComDelay('Fico muito feliz em saber disso! Conte comigo sempre que precisar. 😊');
+    return;
+  }
+  if (/estou triste|chateado|cansado|desanimado|dif[ií]cil|piorou|decepcionado|frustrado|desmotivado/i.test(msg)) {
+    exibirRespostaComDelay('Sinto muito que esteja assim. Se quiser conversar ou desabafar, estou aqui para ouvir e ajudar no que puder. Lembre-se: dias difíceis passam!');
+    return;
+  // ...existing code...
+  }
+  // Resposta baseada em contexto de múltiplos módulos
+  if (/como os m[oó]dulos se relacionam|como funciona a integra[çc][aã]o|dados cruzados entre abas/i.test(msg)) {
+    exibirRespostaComDelay('Os módulos do sistema compartilham dados: clientes podem estar vinculados a reclamações, SAC Ativo e insatisfeitos. Relatórios mostram informações cruzadas para facilitar a análise e tomada de decisão.');
+    return;
+  }
+  // Análise de intenção e contexto
+  if (/por que/i.test(msg) && /n[ãa]o (aparece|salva|imprime|exporta|funciona|filtra|carrega)/i.test(msg)) {
+    exibirRespostaComDelay('Pode ser um problema de conexão, dados incompletos ou permissão insuficiente. Verifique se todos os campos obrigatórios estão preenchidos, recarregue a página e tente novamente. Se persistir, relate o erro ao suporte.');
+    return;
+  }
+  // Sugestão proativa baseada em uso
+  if (/dica|sugest[ãa]o|como melhorar|otimizar|produtividade/i.test(msg)) {
+    let dica = 'Utilize os filtros avançados nos relatórios para encontrar rapidamente o que precisa.';
+    if (window._clientesCache && window._clientesCache.length > 50) dica = 'Você possui muitos clientes cadastrados. Considere segmentar por empresa ou região para facilitar o atendimento.';
+    if (window._sacAtivoCache && window._sacAtivoCache.length > 20) dica = 'Há muitos atendimentos SAC Ativo. Revise os pendentes e priorize os mais antigos para melhorar o tempo de resposta.';
+    exibirRespostaComDelay('Sugestão inteligente: ' + dica);
+    return;
+  }
+  // Comparação de dados
+  if (/comparar|comparativo|diferen[çc]a entre/i.test(msg)) {
+    if (window._clientesCache && window._relatorioInsatisfeitosCache) {
+      const total = window._clientesCache.length;
+      const insat = window._relatorioInsatisfeitosCache.length;
+      exibirRespostaComDelay(`Comparativo: Você tem <b>${total}</b> clientes e <b>${insat}</b> registros de insatisfeitos. Isso representa ${(insat/total*100).toFixed(1)}% de insatisfação registrada.`);
+    } else {
+      exibirRespostaComDelay('Não foi possível gerar o comparativo. Consulte os dados de clientes e insatisfeitos primeiro.');
+    }
+    return;
+  }
+  // Análise de tendências (simulada)
+  if (/tend[eê]ncia(s)?|an[aá]lise de dados|crescimento|queda|evolu[çc][aã]o/i.test(msg)) {
+    if (window._clientesCache && window._clientesCache.length > 0) {
+      exibirRespostaComDelay('Análise de tendência: O número de clientes está crescendo de acordo com os cadastros recentes. Mantenha o foco no atendimento de qualidade para continuar evoluindo!');
+    } else {
+      exibirRespostaComDelay('Não há dados suficientes para análise de tendência.');
+    }
+    return;
+  }
+  // Simulação de conversa natural
+  if (/me conte uma hist[oó]ria|converse comigo|bata um papo|fale sobre voc[êe]/i.test(msg)) {
+    exibirRespostaComDelay('Claro! Eu sou um assistente virtual criado para ajudar você a gerenciar o pós-vendas. Adoro conversar sobre tecnologia, produtividade e ajudar a resolver problemas. Se quiser, posso contar uma curiosidade ou uma piada também!');
+    return;
+  }
+  // Resposta adaptativa baseada no histórico (simulada)
+  if (/minhas [aá]ltimas a[çc][oõ]es|o que fiz|meu hist[oó]rico|o que registrei/i.test(msg)) {
+    if (window._clientesCache && window._clientesCache.length) {
+      const ult = window._clientesCache.slice(-1)[0];
+      exibirRespostaComDelay('Sua última ação foi cadastrar o cliente: <b>' + (ult.nome || ult.empresa || ult.cnpj || '(sem nome)') + '</b>. Se quiser detalhes de outros registros, é só pedir!');
+    } else {
+      exibirRespostaComDelay('Não encontrei ações recentes. Cadastre ou consulte clientes para começar!');
+    }
+    return;
+  }
+  // Perguntas sobre campos e dados de clientes
+  if (/campo(s)?|dado(s)? do cliente|quais campos|informações do cliente|o que posso cadastrar no cliente/i.test(msg)) {
+    exibirRespostaComDelay('No cadastro de clientes, você pode informar: nome, e-mail, CNPJ, empresa, endereço e outros dados relevantes. Todos os campos obrigatórios estão sinalizados no formulário.');
+    return;
+  }
+  // Perguntas sobre módulos e funcionalidades
+  if (/m[oó]dulo(s)?|funcionalidade(s)?|o que faz a aba|para que serve a aba|explica a aba|explicar a aba|como funciona a aba/i.test(msg)) {
+    exibirRespostaComDelay('O sistema possui módulos para Clientes, Reclamações, SAC Ativo, Conserto e Relatórios. Cada aba tem funções específicas: cadastro, consulta, registro, acompanhamento, geração e exportação de relatórios. Pergunte sobre uma aba específica para detalhes!');
+    return;
+  }
+  // Perguntas sobre ações e fluxos
+  if (/como (fa[cz]o|realizo|executo|crio|registro|consulto|excluo|edito|atualizo|imprimo|exporto|filtro|busco)/i.test(msg)) {
+    exibirRespostaComDelay('Para cada ação, acesse a aba correspondente e utilize os botões de Cadastro, Consulta, Exportação, Impressão ou Filtros. Se quiser um passo a passo de uma ação específica, pergunte detalhando a aba e a ação!');
+    return;
+  }
+  // Perguntas sobre relatórios e filtros
+  if (/relat[óo]rio(s)?|como filtrar|como buscar|como exportar|como imprimir|como gerar/i.test(msg)) {
+    exibirRespostaComDelay('Para gerar relatórios, acesse a aba Relatórios, escolha o tipo (Clientes, Insatisfeitos, SAC Ativo), aplique filtros desejados e clique em Gerar. Para exportar, clique em Exportar e escolha o formato. Para imprimir, use o botão Imprimir.');
+    return;
+  }
+  // Perguntas sobre permissões, segurança, acesso
+  if (/permiss[ãa]o|seguran[çc]a|quem pode|acesso restrito|privacidade/i.test(msg)) {
+    exibirRespostaComDelay('O sistema foi projetado para uso interno, com acesso controlado pelo responsável da empresa. Não há integração com login externo, mas é importante manter o computador seguro e os dados protegidos.');
+    return;
+  }
+  // Exemplos e dúvidas complexas
+  if (/exemplo|passo a passo|tutorial|caso de uso|cen[aá]rio|situa[çc][aã]o|como resolver|o que fazer se|dica avan[çc]ada|problema/i.test(msg)) {
+    exibirRespostaComDelay('Se quiser um exemplo prático ou passo a passo, basta dizer a aba e a ação desejada. Exemplo: "Como exportar clientes?" ou "Como registrar um atendimento SAC?". Posso explicar fluxos completos, dicas avançadas e como resolver problemas comuns!');
+    return;
+  }
+  // Perguntas sobre integração entre módulos
+  if (/integra[çc][aã]o|relacionamento entre m[oó]dulos|dados cruzados|vincular/i.test(msg)) {
+    exibirRespostaComDelay('Os módulos do sistema são integrados: ao cadastrar um cliente, você pode vinculá-lo a reclamações, SAC Ativo e insatisfeitos. Relatórios mostram dados cruzados para facilitar a análise e tomada de decisão.');
+    return;
+  }
+  // Perguntas sobre limitações, melhorias, roadmap
+  if (/limita[çc][aã]o|o sistema faz|o sistema n[ãa]o faz|melhoria|atualiza[çc][aã]o|novidade|roadmap/i.test(msg)) {
+    exibirRespostaComDelay('O sistema está em constante evolução! Se sentir falta de alguma funcionalidade, envie sua sugestão. Novas versões podem trazer melhorias, integrações e recursos avançados conforme a necessidade dos usuários.');
+    // ...existing code...
+    exibirRespostaComDelay('Pode deixar! Vou tentar lembrar, mas como sou um assistente local, não consigo enviar notificações reais. Anote em um lugar seguro também!');
+    return;
+  }
+  // Sorteio
+  if (/sorteia|sorteio|me sorteia|n[uú]mero da sorte/i.test(msg)) {
+    const num = Math.floor(Math.random()*100)+1;
+    exibirRespostaComDelay('Seu número da sorte é: <b>' + num + '</b>!');
+    return;
+  }
+  // Sugestão de nomes
+  if (/nome para|sugira um nome|nome criativo/i.test(msg)) {
+    const nomes = ['DoudgeBot', 'AtendeFácil', 'SoluBot', 'PósVendasPro', 'ClienteAmigo', 'SACMaster', 'RelataBot', 'ConsertaJá'];
+    exibirRespostaComDelay('Sugestão de nome: <b>' + nomes[Math.floor(Math.random()*nomes.length)] + '</b>');
+    return;
+  }
+  // Simulação de empatia/conversa
+  if (/estou triste|cansado|dif[ií]cil|desanimado|preciso de apoio|me anime|me anima|me motive/i.test(msg)) {
+    exibirRespostaComDelay('Sinto muito que esteja passando por isso. Lembre-se: todo desafio é uma oportunidade de crescer. Você é capaz e não está sozinho! Se precisar conversar, estou aqui para ouvir.');
+    return;
+  }
+  // Piadas e curiosidades
+  if (/piada|conte.*piada|me faz rir|engra[çc]ado/i.test(msg)) {
+    const piadas = [
+      'Por que o programador foi ao médico? Porque ele tinha um bug! 🐞',
+      'Qual o café mais perigoso do mundo? O Java!',
+      'Por que o computador foi ao médico? Porque estava com um vírus!',
+      'O que o código disse para o outro? Você tem muitos problemas!',
+      'Por que o banco de dados terminou com a tabela? Porque ela tinha muitos relacionamentos!'
+    ];
+    exibirRespostaComDelay(piadas[Math.floor(Math.random()*piadas.length)]);
+    return;
+  }
+  // Curiosidades
+  if (/curiosidade|sabia que|fato interessante/i.test(msg)) {
+    const curiosidades = [
+      'Você sabia? O primeiro bug de computador foi um inseto de verdade encontrado em 1947!',
+      'O símbolo @ foi usado pela primeira vez em emails em 1971.',
+      'O nome "Bluetooth" vem de um rei viking chamado Harald Bluetooth.',
+      'O primeiro mouse de computador era feito de madeira!',
+      'O emoji mais usado no mundo é 😂.'
+    ];
+    exibirRespostaComDelay(curiosidades[Math.floor(Math.random()*curiosidades.length)]);
+    return;
+  }
+  // Motivação
+  if (/motiva[cç][aã]o|frase motivacional|me motive|inspira/i.test(msg)) {
+    const motiv = [
+      'O sucesso é a soma de pequenos esforços repetidos todos os dias! 💡',
+      'Acredite no seu potencial e vá além!',
+      'Cada desafio é uma oportunidade de crescer.',
+      'Você é capaz de conquistar grandes resultados!',
+      'Não desista, grandes conquistas levam tempo.'
+    ];
+    exibirRespostaComDelay(motiv[Math.floor(Math.random()*motiv.length)]);
+    return;
+  }
+  // Feedback e sugestões
+  if (/gostei|n[ãa]o gostei|melhorar|sugest[ãa]o|feedback/i.test(msg)) {
+    exibirRespostaComDelay('Sua opinião é muito importante! Se tiver sugestões de melhoria, envie para o suporte ou descreva aqui. Estamos sempre buscando evoluir o sistema!');
+    return;
+  }
+  // Comandos de IA simulada
+  if (/resuma|resumo|explique|explana|detalhe|detalhado/i.test(msg)) {
+    exibirRespostaComDelay('Claro! Posso resumir qualquer módulo, funcionalidade ou processo do sistema. Diga o que deseja que eu explique ou resuma.');
+    return;
+  }
+  if (/comando(s)?|o que voc[êe] faz|ajuda de comandos|fun[cç][aã]o(es)?|habilidades|capacidade(s)?|o que pode/i.test(msg)) {
+    exibirRespostaComDelay('Sou um assistente inteligente! Posso explicar módulos, dar dicas, contar piadas, mostrar curiosidades, motivar, sugerir atalhos, resumir processos, responder dúvidas sobre relatórios, exportação, personalização, erros, integração, e muito mais. Experimente perguntar!');
+    return;
+  }
+  // Fallback criativo
+  if (/^(.*)$/i.test(msg) && msg.length > 2) {
+    const fallback = [
+      'Desculpe, não entendi exatamente. Pode reformular ou perguntar sobre qualquer módulo, dica, ou até pedir uma piada! 😊',
+      'Ainda estou aprendendo! Tente perguntar de outra forma ou peça um exemplo prático.',
+      'Não reconheci esse comando, mas posso ajudar com relatórios, exportação, dicas, curiosidades, piadas e mais!',
+      'Se precisar de ajuda, basta perguntar sobre qualquer funcionalidade, ou peça uma curiosidade ou motivação!'
+    ];
+    exibirRespostaComDelay(fallback[Math.floor(Math.random()*fallback.length)]);
+    return;
+  }
+  // Relatórios
+  if (/relat[óo]rio(s)? de clientes|relat[óo]rio(s)? de insatisfeitos|relat[óo]rio(s)? de sac ativo|como gerar relat[óo]rio|relat[óo]rio(s)?/i.test(msg)) {
+    exibirRespostaComDelay('Para gerar relatórios, acesse a aba <b>Relatórios</b> e selecione o tipo desejado: Clientes, Insatisfeitos ou SAC Ativo. Você pode aplicar filtros por empresa, período, nota, etc. Depois, visualize em tabela, clique para detalhes ou imprima/exporte.');
+    return;
+  }
+  // Exportação
+  if (/exportar|baixar dados|excel|csv|como exporta/i.test(msg)) {
+    exibirRespostaComDelay('Para exportar dados, gere o relatório desejado e clique em <b>Exportar</b>. Escolha o formato (Excel/CSV). Você pode filtrar os dados antes de exportar para obter apenas o que precisa.');
+    return;
+  }
+  // Personalização
+  if (/personaliza|avatar|nome do sistema|tema|cor|mudar visual|alterar visual/i.test(msg)) {
+    exibirRespostaComDelay('Você pode personalizar o sistema alterando o tema, cor, avatar e nome no topo da tela. Basta clicar no avatar ou nome para abrir as opções de personalização.');
+    return;
+  }
+  // Erros comuns
+  if (/erro|problema|bug|n[ãa]o aparece|n[ãa]o salva|n[ãa]o imprime|n[ãa]o exporta|n[ãa]o filtra/i.test(msg)) {
+    exibirRespostaComDelay('Se encontrar algum erro, tente recarregar a página. Verifique se preencheu todos os campos obrigatórios. Se o problema persistir, confira sua conexão com a internet ou entre em contato com o suporte.');
+    return;
+  }
+  // Exemplos práticos
+  if (/exemplo pr[áa]tico|como fazer|passo a passo|tutorial/i.test(msg)) {
+    exibirRespostaComDelay('Exemplo prático: <br>1. Cadastre um cliente na aba Clientes.<br>2. Registre um atendimento SAC ou insatisfeito.<br>3. Gere um relatório filtrando por empresa ou período.<br>4. Exporte ou imprima o relatório.<br>Se quiser um tutorial de uma aba específica, pergunte pelo nome dela!');
+    return;
+  }
+  // Atalhos e navegação
+  if (/atalho|navega[cç][aã]o r[áa]pida|menu lateral|como acessar/i.test(msg)) {
+    exibirRespostaComDelay('Use o menu lateral para acessar rapidamente as principais funções: Clientes, Reclamações, SAC Ativo, Conserto e Relatórios. Passe o mouse sobre os ícones para ver o nome de cada aba.');
+    return;
+  }
+  // Temas
+  if (/tema escuro|tema claro|mudar tema|alternar tema/i.test(msg)) {
+    exibirRespostaComDelay('Para alternar entre tema escuro e claro, clique no botão de tema no topo direito da tela. O sistema lembrará sua escolha na próxima vez.');
+    return;
+  }
+  // Cadastro, exclusão, impressão, filtros
+  if (/cadastrar|adicionar|novo registro/i.test(msg)) {
+    exibirRespostaComDelay('Para cadastrar um novo registro, acesse a aba correspondente (Clientes, Reclamações, SAC Ativo, etc.) e clique em "Cadastro" ou "Novo". Preencha os campos obrigatórios e salve.');
+    return;
+  }
+  if (/excluir|apagar|remover registro/i.test(msg)) {
+    exibirRespostaComDelay('Para excluir um registro, localize-o na lista ou relatório, clique em "Ver" ou "Detalhes" e depois em "Excluir". Confirme a exclusão quando solicitado.');
+    return;
+  }
+  if (/imprimir|como imprimir|gerar pdf/i.test(msg)) {
+    exibirRespostaComDelay('Para imprimir, gere o relatório ou abra o detalhe do registro e clique em "Imprimir". O sistema abrirá uma visualização pronta para impressão ou PDF.');
+    return;
+  }
+  if (/filtrar|buscar|procurar|refinar busca/i.test(msg)) {
+    exibirRespostaComDelay('Use os campos de filtro e busca nas abas e relatórios para refinar os resultados. Você pode filtrar por nome, empresa, período, nota, etc.');
+    return;
+  }
+  // Integração entre módulos
+  if (/ligar|relacionar|vincular|integra[çc][aã]o entre/i.test(msg)) {
+    exibirRespostaComDelay('Os módulos do sistema são integrados: ao cadastrar um cliente, você pode vinculá-lo a reclamações, SAC Ativo e insatisfeitos. Os relatórios mostram dados cruzados para facilitar a análise.');
+    return;
+  }
+  // Função para exibir a resposta do bot com delay de 5 segundos
+  function exibirRespostaComDelay(resposta) {
+    setTimeout(function() {
+      adicionarMsgChatbot('bot', resposta);
+    }, 5000);
+  }
+
+  // Respostas inteligentes baseadas em dados reais do sistema
+  // Clientes
+  if (/quantos clientes|n[úu]mero de clientes|total de clientes|clientes cadastrados/i.test(msg)) {
+    if (window._clientesCache && window._clientesCache.length) {
+      exibirRespostaComDelay(`Atualmente há <b>${window._clientesCache.length}</b> clientes cadastrados no sistema.`);
+    } else {
+      exibirRespostaComDelay('Não foi possível obter o total de clientes. Tente consultar a lista de clientes primeiro.');
+    }
+    return;
+  }
+  if (/listar clientes|mostrar clientes|ver clientes/i.test(msg)) {
+    if (window._clientesCache && window._clientesCache.length) {
+      const nomes = window._clientesCache.slice(0, 5).map(c => c.nome || c.empresa || c.cnpj || '(sem nome)').join(', ');
+      exibirRespostaComDelay(`Aqui estão alguns clientes cadastrados: <b>${nomes}</b>... Para ver todos, acesse a aba Clientes.`);
+    } else {
+      exibirRespostaComDelay('Não foi possível listar clientes. Tente consultar a lista de clientes primeiro.');
+    }
+    return;
+  }
+  // Insatisfeitos
+  if (/quantos insatisfeitos|n[úu]mero de insatisfeitos|total de insatisfeitos/i.test(msg)) {
+    if (window._relatorioInsatisfeitosCache && window._relatorioInsatisfeitosCache.length) {
+      exibirRespostaComDelay(`Há <b>${window._relatorioInsatisfeitosCache.length}</b> registros de insatisfeitos no relatório atual.`);
+    } else {
+      exibirRespostaComDelay('Não foi possível obter o total de insatisfeitos. Gere o relatório de insatisfeitos primeiro.');
+    }
+    return;
+  }
+  if (/listar insatisfeitos|mostrar insatisfeitos|ver insatisfeitos/i.test(msg)) {
+    if (window._relatorioInsatisfeitosCache && window._relatorioInsatisfeitosCache.length) {
+      const nomes = window._relatorioInsatisfeitosCache.slice(0, 5).map(i => i.nomeCliente || i.empresa || '(sem nome)').join(', ');
+      exibirRespostaComDelay(`Alguns insatisfeitos do relatório: <b>${nomes}</b>... Para ver todos, gere o relatório de insatisfeitos.`);
+    } else {
+      exibirRespostaComDelay('Não foi possível listar insatisfeitos. Gere o relatório de insatisfeitos primeiro.');
+    }
+    return;
+  }
+  // SAC Ativo
+  if (/quantos sac ativo|n[úu]mero de sac ativo|total de sac ativo|sac ativo cadastrados/i.test(msg)) {
+    if (window._sacAtivoCache && window._sacAtivoCache.length) {
+      exibirRespostaComDelay(`Existem <b>${window._sacAtivoCache.length}</b> registros de SAC Ativo atualmente.`);
+    } else {
+      exibirRespostaComDelay('Não foi possível obter o total de SAC Ativo. Tente consultar a lista de SAC Ativo primeiro.');
+    }
+    return;
+  }
+  if (/listar sac ativo|mostrar sac ativo|ver sac ativo/i.test(msg)) {
+    if (window._sacAtivoCache && window._sacAtivoCache.length) {
+      const nomes = window._sacAtivoCache.slice(0, 5).map(s => s.nomeCliente || s.empresa || '(sem nome)').join(', ');
+      exibirRespostaComDelay(`Alguns registros de SAC Ativo: <b>${nomes}</b>... Para ver todos, acesse a aba SAC Ativo.`);
+    } else {
+      exibirRespostaComDelay('Não foi possível listar SAC Ativo. Tente consultar a lista de SAC Ativo primeiro.');
+    }
+    return;
+  }
+  // Sugestões, dicas e exemplos
+  if (/sugest[ãa]o|como aproveitar|dicas|produtividade|melhor uso|boas pr[aá]ticas|como pode ajudar|vantagens|benef[ií]cios/i.test(msg)) {
+    exibirRespostaComDelay(`Aqui vão algumas sugestões para aproveitar ao máximo o sistema Doudge Pós-Vendas:<br><ul style='margin:8px 0 8px 18px;padding:0;'>
+      <li><b>Centralize o atendimento:</b> Use o sistema para registrar todo contato com o cliente, facilitando o histórico e a continuidade do atendimento.</li>
+      <li><b>Monitore reclamações e SAC:</b> Acompanhe prazos, status e resoluções para garantir agilidade e satisfação do cliente.</li>
+      <li><b>Gere relatórios periódicos:</b> Analise os dados para identificar padrões, gargalos e oportunidades de melhoria no pós-venda.</li>
+      <li><b>Personalize o sistema:</b> Ajuste tema, avatar e nome para engajar a equipe e tornar o uso mais agradável.</li>
+      <li><b>Utilize filtros avançados:</b> Refine buscas por período, empresa, nota ou status para encontrar rapidamente o que precisa.</li>
+      <li><b>Exporte dados:</b> Compartilhe informações com outros setores exportando relatórios em Excel ou CSV.</li>
+      <li><b>Treine a equipe:</b> Mostre como cada aba funciona e incentive o registro detalhado de cada atendimento.</li>
+      <li><b>Use o chatbot:</b> Tire dúvidas rápidas, peça dicas ou peça explicações sobre qualquer módulo do sistema.</li>
+    </ul>
+    Se quiser dicas para um setor ou rotina específica, é só perguntar!`);
+    return;
+  }
+  if (/para que serve|o que faz|objetivo|finalidade|prop[oó]sito|qual a fun[cç][aã]o|sobre o sistema|explica|explicar/i.test(msg)) {
+    exibirRespostaComDelay('O sistema Doudge Pós-Vendas foi criado para gerenciar todo o processo de atendimento ao cliente após a venda. Ele permite cadastrar e consultar clientes, registrar e acompanhar reclamações, controlar atendimentos SAC, gerenciar ordens de conserto e gerar relatórios completos. O objetivo é facilitar o acompanhamento do pós-venda, melhorar a satisfação dos clientes, organizar o histórico de atendimentos e fornecer dados para tomada de decisão. Tudo de forma simples, centralizada e eficiente. Se quiser saber sobre uma aba específica, é só perguntar!');
+    return;
+  }
+  // Respostas detalhadas sobre cada aba do sistema (mantém)
+  let resposta = 'Desculpe, não entendi sua pergunta. Tente ser mais específico ou consulte as abas do sistema.';
+  if (/(ol[áa])|(oi)|(bom dia)|(boa tarde)|(boa noite)|(tudo bem)|(e a[ií])|(salve)|(fala)|(opa)|(como vai)|(como est[áa])|(como vc est[áa])|(como você est[áa])|(yo)|(hey)|(eae)|(beleza)|(suave)|(tranquilo)|(sussa)|(tudo certo)|(tudo joia)|(tudo legal)|(tudo ok)|(tudo tranquilo)|(tudo beleza)|(tudo blz)|(tudo show)|(tudo massa)|(al[ôo])|(alo)|(alow)|(aloww)|(alowww)|(alowwww)|(alowwwww)|(alowwwwww)|(alowwwwwww)|(alowwwwwwww)|(alowwwwwwwww)|(alowwwwwwwwww)|(alowwwwwwwwwww)|(alowwwwwwwwwwww)|(alowwwwwwwwwwwww)|(alowwwwwwwwwwwwww)|(alowwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)|(alowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww)/i.test(msg)) {
+    let saudacao = '';
+    if (/bom dia/i.test(msg)) saudacao = 'Bom dia! Que seu dia seja produtivo e positivo.';
+    else if (/boa tarde/i.test(msg)) saudacao = 'Boa tarde! Espero que esteja tendo um ótimo dia.';
+    else if (/boa noite/i.test(msg)) saudacao = 'Boa noite! Se precisar de algo, estou à disposição.';
+    else if (/tudo bem|tudo certo|tudo joia|tudo legal|tudo ok|tudo tranquilo|tudo beleza|tudo blz|tudo show|tudo massa|suave|beleza|tranquilo|sussa/i.test(msg)) saudacao = 'Tudo ótimo por aqui, obrigado por perguntar! E com você, tudo bem? 😊';
+    else if (/yo|hey|eae|opa|salve|fala/i.test(msg)) saudacao = 'E aí! Como posso ajudar hoje?';
+    else if (/al[ôo]|alo|alow+/i.test(msg)) saudacao = 'Alô! Estou aqui, pronto para ajudar no que precisar.';
+    else saudacao = 'Olá! Seja muito bem-vindo(a) ao sistema Doudge Pós-Vendas.';
+    const extras = [
+      'Se precisar de dicas, relatórios ou quiser bater um papo, é só falar!',
+      'Conte comigo para tirar dúvidas sobre o sistema ou pós-venda.',
+      'Estou pronto para ajudar no que precisar!',
+      'Pode perguntar sobre qualquer funcionalidade, fluxo ou até pedir uma piada!',
+      'Fique à vontade para explorar todas as funções do sistema.',
+      'Se quiser uma dica de pós-venda, é só pedir!',
+      'Estou sempre aqui para facilitar seu dia a dia!',
+      'Se quiser saber mais sobre relatórios, exportação ou SAC, pergunte!',
+      'Adoro ajudar! Qual sua dúvida de hoje?',
+      'Se quiser um exemplo prático, posso explicar!',
+      'Vamos juntos melhorar o pós-venda da sua empresa!'
+    ];
+    resposta = saudacao + ' ' + extras[Math.floor(Math.random()*extras.length)];
+    exibirRespostaComDelay(resposta);
+    return;
+  }
+  else if (/clientes?/i.test(msg)) resposta = 'Com certeza! A aba <b>Clientes</b> permite cadastrar novos clientes, consultar a lista completa e acessar detalhes de cada um. <br><b>Exemplo:</b> Clique em "Cadastro" para adicionar um novo cliente, ou em "Consulta" para buscar pelo nome, CNPJ ou empresa. Ao clicar em um cliente, você vê todos os dados e pode editar ou excluir. Se precisar de ajuda em algum passo, é só avisar!';
+  else if (/reclama[cç][aã]o|reclama/i.test(msg)) resposta = 'Claro! Na aba <b>Reclamações</b>, você pode registrar reclamações de clientes, acompanhar o status e ver o histórico. <br><b>Dica:</b> Use "Registrar" para abrir uma nova reclamação e "Consultar" para filtrar por empresa, data ou status. Se precisar de orientação, estou à disposição!';
+  else if (/sac|atendimento|suporte/i.test(msg)) resposta = 'Com prazer! A aba <b>SAC</b> é para atendimento ativo: registre contatos, acompanhe pendências e organize retornos. <br><b>Exemplo:</b> Clique em "Novo Atendimento" para registrar um contato, defina o status (pendente, resolvido) e acompanhe o histórico de cada cliente. Se precisar de mais detalhes, conte comigo!';
+  else if (/conserto|assist[êe]ncia|manuten[cç][aã]o/i.test(msg)) resposta = 'Perfeito! Na aba <b>Conserto</b>, você gerencia ordens de serviço e assistência técnica. <br><b>Dica:</b> Registre um novo conserto, informe o produto, cliente e status. Se precisar de ajuda em qualquer etapa, estou aqui para ajudar!';
+  else if (/relat[óo]rio|relatorios|relatórios/i.test(msg)) resposta = 'Ótima escolha! A aba <b>Relatórios</b> gera relatórios completos de clientes, insatisfeitos e SAC Ativo. <br><b>Como usar:</b> Escolha o tipo de relatório, aplique filtros (empresa, período, nota) e visualize em tabela. Clique para ver detalhes ou imprimir. <br><b>Dica:</b> Use a exportação para baixar os dados em Excel ou CSV. Qualquer dúvida, estou à disposição!';
+  else if (/exporta/i.test(msg)) resposta = 'Com certeza! A exportação está na aba Relatórios. <br><b>Como fazer:</b> Gere o relatório desejado, clique em "Exportar" e escolha o formato (Excel/CSV). Você pode filtrar os dados antes de exportar. Se precisar de ajuda, é só pedir!';
+  else if (/menu|aba|painel|navega/i.test(msg)) resposta = 'Com prazer! O menu lateral traz acesso rápido às principais funções: <br>• <b>Clientes</b>: cadastro e consulta<br>• <b>Reclamações</b>: registro e acompanhamento<br>• <b>SAC</b>: atendimento ativo<br>• <b>Conserto</b>: ordens de serviço<br>• <b>Relatórios</b>: análise e exportação<br><b>Dica:</b> Passe o mouse sobre os ícones para ver o nome de cada aba. Se precisar de um passo a passo, é só pedir!';
+  else if (/funciona|como usar|ajuda|dica|primeiro acesso|iniciante/i.test(msg)) resposta = 'Seja muito bem-vindo(a)! Para começar, cadastre seus clientes na aba Clientes. Depois, use as demais abas para registrar atendimentos, reclamações e gerar relatórios. <br><b>Dica:</b> Personalize o sistema no topo, alterando tema, avatar e nome. Se tiver dúvidas, pergunte aqui sobre qualquer módulo. Estou sempre à disposição para ajudar!';
+  else if (/exemplo|passo a passo|tutorial/i.test(msg)) resposta = 'Com todo prazer! Exemplo de fluxo: <br>1. Cadastre um cliente.<br>2. Registre uma reclamação ou atendimento SAC.<br>3. Acompanhe o status pelo histórico.<br>4. Gere um relatório filtrando por período ou empresa.<br>5. Exporte os dados para Excel se desejar.<br>Se quiser um tutorial de uma aba específica, pergunte pelo nome dela!';
+  exibirRespostaComDelay(resposta + (resposta ? '<br><span style="font-size:0.95em;color:#888;">Estou sempre à disposição para ajudar no que precisar! 😊</span>' : ''));
+}
+// Não exibe nenhuma mensagem automática ao abrir o chatbot
+document.getElementById('chatbotBox').style.display = 'none';
+</script>
+<style>
+body.tema-escuro .header-glass {
+  background: linear-gradient(120deg, #111b 60%, #1976d2cc 100%) !important;
+  box-shadow: 0 4px 32px #0008, 0 2px 8px #1976d288;
+  border-radius: 0 0 24px 24px;
+  border: 1.5px solid #222a;
+  backdrop-filter: blur(14px) saturate(1.1);
+}
+body.tema-escuro .avatar-glow {
+  background: radial-gradient(circle, #222 0%, #1976d2 80%, transparent 100%);
+  box-shadow: 0 0 24px #1976d2cc, 0 0 0 8px #222b;
+}
+body.tema-escuro .avatar-animado {
+  border-color: #43a047;
+  box-shadow: 0 2px 12px #43a04788;
+}
+body.tema-escuro .avatar-animado:hover {
+  box-shadow: 0 8px 32px #43a047cc, 0 0 0 7px #fffde7, 0 0 18px #fffde7;
+  border-color: #ffd600;
+}
+body.tema-escuro .saudacao-neon {
+  color: #fff;
+  text-shadow: 0 0 8px #1976d2, 0 2px 12px #43a047, 0 0 18px #43a047, 0 1px 0 #111;
+  filter: brightness(1.18) drop-shadow(0 0 8px #43a047);
+}
+body.tema-escuro .btn-tema-animado {
+  background: linear-gradient(90deg,#222 60%,#1976d2 100%) !important;
+  color: #fffde7;
+  box-shadow: 0 2px 12px #1976d2cc, 0 0 0 2px #43a04744;
+  border-radius: 10px;
+}
+body.tema-escuro .btn-tema-animado:hover {
+  background:linear-gradient(90deg,#1976d2 60%,#43a047 100%) !important;
+  color: #fff;
+  box-shadow: 0 8px 32px #43a04788, 0 0 0 7px #fffde7;
+}
+</style>
+<!DOCTYPE html>
+<script>
+// Fecha todos os painéis/abas abertos
+window.fecharAbas = function() {
+  var painelSacAtivo = document.getElementById('painelSacAtivo');
+  if (painelSacAtivo) painelSacAtivo.style.display = 'none';
+  var painelInsatisfeitos = document.getElementById('painelInsatisfeitos');
+  if (painelInsatisfeitos) painelInsatisfeitos.style.display = 'none';
+  var formInsatisfeito = document.getElementById('formInsatisfeito');
+  if (formInsatisfeito) formInsatisfeito.classList.add('hidden');
+  var sacAtivo = document.getElementById('sac-ativo');
+  if (sacAtivo) sacAtivo.classList.add('hidden');
+}
+
+// Fecha abas ao clicar fora de painéis/modais
+document.addEventListener('mousedown', function(e) {
+  var idsPainel = ['painelSacAtivo', 'painelInsatisfeitos', 'formInsatisfeito', 'sac-ativo'];
+  var inside = idsPainel.some(id => {
+    var el = document.getElementById(id);
+    return el && el.contains(e.target) && el.style.display !== 'none' && !el.classList.contains('hidden');
+  });
+  // Se não clicou dentro de nenhum painel aberto, fecha todos
+  if (!inside) window.fecharAbas();
+});
+</script>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+
+  <title>DOUDGE PÓS-VENDAS</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --cor-destaque: #1976d2;
+      --cor-destaque-escura: #115293;
+      --cor-fundo: #f6f8fc;
+      --cor-card: #fff;
+      --cor-glass: rgba(255,255,255,0.75);
+      --cor-glass-dark: rgba(30,40,60,0.82);
+      --sombra-card: 0 8px 32px #1976d233, 0 2px 8px #0001;
+      --sombra-hover: 0 12px 32px #1976d244, 0 2px 8px #0002;
+      --borda-radius: 18px;
+      --fonte: 'Montserrat', 'Roboto', 'Segoe UI', Arial, sans-serif;
+      --fonte-titulo: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+      --fonte-padrao: 'Roboto', 'Segoe UI', Arial, sans-serif;
+      --tam-fonte: 1.08em;
+    }
+    body {
+      background: linear-gradient(120deg, #f6f8fc 60%, #e3f2fd 100%) !important;
+      font-family: var(--fonte-padrao);
+      font-size: var(--tam-fonte);
+      min-height: 100vh;
+      letter-spacing: 0.01em;
+      -webkit-font-smoothing: antialiased;
+      color: #232a3a;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      font-family: var(--fonte-titulo);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: var(--cor-destaque);
+      margin-bottom: 0.5em;
+    }
+    .header, .footer {
+      font-family: var(--fonte-titulo);
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+    .sidebar, .card, .main-content, button, input, select, textarea, label, .logo, .sidebar nav a {
+      font-family: var(--fonte);
+    }
+    .sidebar nav a {
+      font-size: 1.13em;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    label {
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+    input, select, textarea {
+      font-size: 1.08em;
+      border-radius: 7px;
+      border: 1.5px solid #bdbdbd;
+      padding: 7px 10px;
+      margin-bottom: 6px;
+      font-family: var(--fonte);
+      transition: border 0.18s, box-shadow 0.18s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border: 2px solid var(--cor-destaque);
+      box-shadow: 0 2px 8px #1976d222;
+      outline: none;
+    }
+    .logo {
+      font-family: var(--fonte-titulo);
+      font-size: 2.3rem;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+    }
+    /* ...demais estilos existentes... */
+  </style>
+</head>
+<body>
+  <div id="boasVindasAnimada" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1976d2;color:#fff;padding:32px 48px;border-radius:18px;font-size:2rem;font-weight:bold;z-index:10001;box-shadow:0 8px 32px #0005;opacity:0;transition:opacity 0.7s;pointer-events:none;"></div>
+  <script>
+    // Ripple effect nos botões principais
+    document.addEventListener('click', function(e) {
+      if (e.target.tagName === 'BUTTON' && e.target.offsetWidth > 60) {
+        let ripple = document.createElement('span');
+        ripple.className = 'ripple-effect';
+        ripple.style.left = (e.offsetX || 0) + 'px';
+        ripple.style.top = (e.offsetY || 0) + 'px';
+        e.target.appendChild(ripple);
+        setTimeout(()=>ripple.remove(), 600);
+      }
+    });
+    // Animação de transição suave ao alternar módulos
+    window.mainContent = document.querySelector('.main-content');
+    if(mainContent) {
+      const observer = new MutationObserver(()=>{
+        mainContent.style.opacity = '0.2';
+        setTimeout(()=>mainContent.style.opacity = '1', 220);
+      });
+      observer.observe(mainContent, {childList:true,subtree:true});
+    }
+    // Mensagem de boas-vindas animada
+    window.addEventListener('DOMContentLoaded', function() {
+      const nome = localStorage.getItem('nomeUsuario') || 'Usuário';
+      const el = document.getElementById('boasVindasAnimada');
+      el.textContent = `Bem-vindo(a), ${nome}!`;
+      el.style.display = 'block';
+      setTimeout(()=>{el.style.opacity='1';}, 100);
+      setTimeout(()=>{el.style.opacity='0';}, 2200);
+      setTimeout(()=>{el.style.display='none';}, 3000);
+    });
+  </script>
+  <style>
+    :root {
+      --cor-destaque: #1976d2;
+      --cor-destaque-escura: #115293;
+      --cor-fundo: #f6f8fc;
+      --cor-card: #fff;
+      --cor-glass: rgba(255,255,255,0.75);
+      --cor-glass-dark: rgba(30,40,60,0.82);
+      --sombra-card: 0 8px 32px #1976d233, 0 2px 8px #0001;
+      --sombra-hover: 0 12px 32px #1976d244, 0 2px 8px #0002;
+      --borda-radius: 18px;
+      --fonte: 'Segoe UI', 'Montserrat', Arial, sans-serif;
+    }
+    body {
+      background: linear-gradient(120deg, #f6f8fc 60%, #e3f2fd 100%) !important;
+      font-family: var(--fonte);
+      min-height: 100vh;
+    }
+    .header, .footer {
+      background: var(--cor-destaque) !important;
+      color: #fff !important;
+      border-radius: var(--borda-radius);
+      box-shadow: var(--sombra-card);
+      font-family: var(--fonte);
+      backdrop-filter: blur(6px);
+      margin-bottom: 12px;
+    }
+    .header {
+      font-size: 1.5rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+      padding: 18px 32px;
+      background: linear-gradient(90deg, #1976d2 80%, #43a047 100%) !important;
+      border-top-left-radius: var(--borda-radius);
+      border-top-right-radius: var(--borda-radius);
+    }
+    .footer {
+  font-size: 1.1rem;
+  padding: 12px 0;
+  background: linear-gradient(90deg, #1976d2 80%, #43a047 100%) !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+  margin-top: 18px;
+  position: relative;
+  z-index: 10;
+    }
+    .sidebar {
+  background-color: #fff !important;
+  box-shadow: 0 8px 32px #1976d233, 0 2px 8px #0001;
+      position: relative;
+    }
+    .sidebar::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 18px;
+      background: linear-gradient(90deg, #1976d2 80%, #43a047 100%) !important;
+      z-index: 2;
+      border-bottom-left-radius: 0 !important;
+      border-bottom-right-radius: 0 !important;
+      background: linear-gradient(120deg, #232a3a 80%, #1976d2 100%) !important;
+  color: #fff !important;
+  border-top-right-radius: var(--borda-radius);
+  border-bottom-right-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  z-index: 1;
+  box-shadow: var(--sombra-card);
+  font-family: var(--fonte);
+  backdrop-filter: blur(8px);
+}
+    .sidebar nav a.active, .sidebar nav a:hover {
+      background: linear-gradient(90deg, #1976d2 80%, #43a047 100%) !important;
+      color: #fff !important;
+      box-shadow: 0 2px 8px #1976d244;
+    }
+    button, #btnTema {
+      background: var(--cor-destaque) !important;
+      color: #fff !important;
+      border-radius: 8px !important;
+      font-family: var(--fonte);
+      font-weight: 600;
+      font-size: 1.08em;
+      box-shadow: 0 2px 8px #1976d222;
+      border: none;
+      transition: background 0.18s, box-shadow 0.18s, transform 0.13s;
+      outline: none;
+    }
+    button:hover, #btnTema:hover {
+      background: var(--cor-destaque-escura) !important;
+      box-shadow: var(--sombra-hover);
+      transform: translateY(-1px) scale(1.03);
+    }
+    .card, .main-content > div.card {
+      background: var(--cor-card);
+      border-radius: var(--borda-radius);
+      box-shadow: var(--sombra-card);
+      padding: 32px 32px 28px 32px;
+      margin: 32px auto 0 auto;
+      max-width: 600px;
+      font-family: var(--fonte);
+      transition: box-shadow 0.18s, transform 0.13s;
+    }
+    .card:hover {
+      box-shadow: var(--sombra-hover);
+      transform: translateY(-2px) scale(1.012);
+    }
+    .main-content {
+      transition: opacity 0.22s;
+      background: transparent;
+      min-height: 70vh;
+    }
+    .logo {
+  font-size: 2.2rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #1976d2;
+  background: #fff;
+  border-radius: 8px;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  padding: 8px 12px;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 2;
+}
+    .logo:hover {
+      box-shadow: 0 6px 32px #1976d244, 0 0 0 7px #ffeb3bcc, 0 0 18px #fffde7;
+      border-color: #ffd600;
+      transform: scale(1.06) rotate(-2deg);
+      animation: brilhoLogo 1.2s linear infinite alternate;
+    }
+    @keyframes brilhoLogo {
+      0% { filter: drop-shadow(0 0 0px #fffde7); }
+      100% { filter: drop-shadow(0 0 12px #fffde7); }
+    }
+    .sidebar .logo + div {
+      font-size: 1.25rem;
+      color: #ffd600;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 18px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: color 0.18s, text-shadow 0.18s;
+      text-shadow: 0 2px 8px #ffd60044;
+    }
+    .sidebar .logo + div:hover {
+      color: #fffde7;
+      text-shadow: 0 4px 16px #ffd60099, 0 0 8px #fffde7;
+      text-decoration: underline wavy #ffd600 1.5px;
+    }
+    /* Ripple effect */
+    .ripple-effect {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      width: 60px;
+      height: 60px;
+      transform: translate(-50%,-50%);
+      pointer-events: none;
+      animation: ripple-anim 0.6s linear;
+      z-index: 10;
+    }
+    @keyframes ripple-anim {
+      from { opacity: 0.7; transform: scale(0.2); }
+      to { opacity: 0; transform: scale(1.8); }
+    }
+    button { position: relative; overflow: hidden; }
+  </style>
+  <div id="notificacaoSistema" style="display:none;position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:99999;min-width:220px;max-width:90vw;padding:16px 32px;border-radius:10px;font-size:18px;font-weight:bold;box-shadow:0 4px 24px #0005;text-align:center;transition:all 0.4s;pointer-events:none;"></div>
+  <script>
+    // Função global para mostrar notificações animadas
+    window.mostrarNotificacao = function(msg, tipo = 'info') {
+      const notif = document.getElementById('notificacaoSistema');
+      notif.textContent = msg;
+      notif.style.display = 'block';
+      notif.style.background = tipo === 'erro' ? '#e53935' : (tipo === 'sucesso' ? '#43a047' : '#1976d2');
+      notif.style.color = '#fff';
+      notif.style.opacity = '1';
+      notif.style.top = '24px';
+      setTimeout(() => {
+        notif.style.opacity = '0';
+        notif.style.top = '0px';
+        setTimeout(() => notif.style.display = 'none', 400);
+      }, 2600);
+    }
+  </script>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>DOUDGE PÓS-VENDAS</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+  <body>
+  <!-- Lista Insatisfeitos removida -->
+  <div class="app-container">
+    <aside class="sidebar">
+      <!-- Painel de Ações Rápidas removido conforme solicitado -->
+      <div class="logo" title="Doudge Pós-Vendas">DPV</div>
+<script>
+// Modal de personalização de cor, fonte e tamanho do sistema
+function abrirModalPersonalizacao() {
+  if (document.getElementById('modalPersonalizacao')) return;
+  const modal = document.createElement('div');
+  modal.id = 'modalPersonalizacao';
+  modal.style.position = 'fixed';
+  modal.style.top = '0';
+  modal.style.left = '0';
+  modal.style.width = '100vw';
+  modal.style.height = '100vh';
+  modal.style.background = 'rgba(0,0,0,0.25)';
+  modal.style.zIndex = '10002';
+  modal.style.display = 'flex';
+  modal.style.alignItems = 'center';
+  modal.style.justifyContent = 'center';
+  modal.innerHTML = `<div style='background:#fff;padding:32px 28px 18px 28px;border-radius:18px;max-width:400px;width:100%;box-shadow:0 4px 24px #1976d244;position:relative;text-align:center;animation:modalPop 0.25s;'>
+    <button onclick='document.getElementById("modalPersonalizacao").remove()' style='position:absolute;top:12px;right:12px;background:#e53935;color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;'>×</button>
+    <h3 style='color:#1976d2;margin-bottom:18px;'>Personalizar Visual do Sistema</h3>
+    <label style='font-weight:bold;'>Cor de destaque:</label><br>
+    <input id='inputCorDestaque' type='color' value='#1976d2' style='width:60px;height:38px;border:none;margin:12px 0 18px 0;cursor:pointer;'>
+    <br>
+    <label style='font-weight:bold;'>Fonte:</label><br>
+    <select id='inputFonte' style='width:90%;padding:7px 10px;margin:8px 0 16px 0;border-radius:7px;'>
+      <option value="Montserrat">Montserrat (moderna)</option>
+      <option value="Roboto">Roboto (suave)</option>
+      <option value="Segoe UI">Segoe UI (Windows)</option>
+      <option value="Arial">Arial</option>
+      <option value="sans-serif">Sans-serif</option>
+    </select>
+    <br>
+    <label style='font-weight:bold;'>Tamanho da fonte:</label><br>
+    <input id='inputTamFonte' type='range' min='0.9' max='1.3' step='0.01' value='1.08' style='width:80%;margin:8px 0 18px 0;'>
+    <span id='tamFonteValor' style='font-size:1.1em;font-weight:bold;'>1.08em</span>
+    <br>
+    <label style='font-weight:bold;'>Avatar:</label><br>
+    <div id='avatarOpcoes' style='display:flex;gap:8px;justify-content:center;margin:10px 0 18px 0;'>
+      <img src="https://ui-avatars.com/api/?name=Usuário&background=1976d2&color=fff&rounded=true&size=48" style="width:38px;height:38px;border-radius:50%;border:2px solid #1976d2;cursor:pointer;" onclick="selecionarAvatar('padrao')">
+      <img src="https://randomuser.me/api/portraits/men/32.jpg" style="width:38px;height:38px;border-radius:50%;border:2px solid #1976d2;cursor:pointer;" onclick="selecionarAvatar('homem')">
+      <img src="https://randomuser.me/api/portraits/women/44.jpg" style="width:38px;height:38px;border-radius:50%;border:2px solid #1976d2;cursor:pointer;" onclick="selecionarAvatar('mulher')">
+      <img src="https://randomuser.me/api/portraits/lego/2.jpg" style="width:38px;height:38px;border-radius:50%;border:2px solid #1976d2;cursor:pointer;" onclick="selecionarAvatar('lego')">
+    </div>
+    <label style='font-weight:bold;'>Nome do usuário:</label><br>
+    <input id='inputNomeUsuario' type='text' maxlength='32' style='width:90%;padding:7px 10px;margin:8px 0 16px 0;border-radius:7px;' placeholder='Digite seu nome'>
+    <br>
+    <button onclick='salvarPersonalizacao()' style='background:#1976d2;color:#fff;font-weight:bold;padding:8px 24px;border:none;border-radius:8px;cursor:pointer;font-size:16px;transition:background 0.2s;'>Salvar</button>
+  </div>
+  <style>@keyframes modalPop{0%{transform:scale(0.8);opacity:0;}100%{transform:scale(1);opacity:1;}}</style>`;
+  // Avatar seleção
+  window.selecionarAvatar = function(tipo) {
+    let url = '';
+    if(tipo==='padrao') url = "https://ui-avatars.com/api/?name=Usuário&background=1976d2&color=fff&rounded=true&size=48";
+    if(tipo==='homem') url = "https://randomuser.me/api/portraits/men/32.jpg";
+    if(tipo==='mulher') url = "https://randomuser.me/api/portraits/women/44.jpg";
+    if(tipo==='lego') url = "https://randomuser.me/api/portraits/lego/2.jpg";
+    localStorage.setItem('avatarUsuario', url);
+    document.getElementById('avatarUsuario').src = url;
+    Array.from(document.querySelectorAll('#avatarOpcoes img')).forEach(img=>img.style.borderColor='#1976d2');
+    event.target.style.borderColor='#43a047';
+  }
+  document.body.appendChild(modal);
+  // Preenche com valores salvos
+  const corSalva = localStorage.getItem('corDestaque') || '#1976d2';
+  document.getElementById('inputCorDestaque').value = corSalva;
+  const fonteSalva = localStorage.getItem('fonteSistema') || 'Montserrat';
+  document.getElementById('inputFonte').value = fonteSalva;
+  const tamSalvo = localStorage.getItem('tamFonte') || '1.08';
+  document.getElementById('inputTamFonte').value = tamSalvo;
+  document.getElementById('tamFonteValor').textContent = tamSalvo + 'em';
+  document.getElementById('inputTamFonte').oninput = function() {
+    document.getElementById('tamFonteValor').textContent = this.value + 'em';
+  };
+  // Avatar e nome
+  const avatarSalvo = localStorage.getItem('avatarUsuario') || "https://ui-avatars.com/api/?name=Usuário&background=1976d2&color=fff&rounded=true&size=48";
+  Array.from(document.querySelectorAll('#avatarOpcoes img')).forEach(img=>{
+    if(img.src===avatarSalvo) img.style.borderColor='#43a047';
+  });
+  document.getElementById('inputNomeUsuario').value = localStorage.getItem('nomeUsuario')||'';
+}
+function salvarPersonalizacao() {
+  const cor = document.getElementById('inputCorDestaque').value;
+  const fonte = document.getElementById('inputFonte').value;
+  const tam = document.getElementById('inputTamFonte').value;
+  localStorage.setItem('corDestaque', cor);
+  localStorage.setItem('fonteSistema', fonte);
+  localStorage.setItem('tamFonte', tam);
+  document.documentElement.style.setProperty('--cor-destaque', cor);
+  document.documentElement.style.setProperty('--fonte', fonte + ", 'Segoe UI', Arial, sans-serif");
+  document.documentElement.style.setProperty('--fonte-titulo', fonte + ", 'Segoe UI', Arial, sans-serif");
+  document.documentElement.style.setProperty('--fonte-padrao', fonte + ", 'Segoe UI', Arial, sans-serif");
+  document.documentElement.style.setProperty('--tam-fonte', tam + 'em');
+  localStorage.setItem('nomeUsuario', document.getElementById('inputNomeUsuario').value);
+  document.getElementById('modalPersonalizacao').remove();
+  if (window.mostrarNotificacao) window.mostrarNotificacao('Personalização aplicada!', 'sucesso');
+  // Atualiza botões e header imediatamente
+  document.querySelectorAll('button, #btnTema').forEach(btn => btn.style.background = cor);
+  document.querySelectorAll('.header, .footer').forEach(h => h.style.background = cor);
+  document.body.style.fontFamily = fonte + ", 'Segoe UI', Arial, sans-serif";
+  document.body.style.fontSize = tam + 'em';
+  // Atualiza avatar e nome
+  document.getElementById('avatarUsuario').src = localStorage.getItem('avatarUsuario')||"https://ui-avatars.com/api/?name=Usuário&background=1976d2&color=fff&rounded=true&size=48";
+  atualizarSaudacao();
+// Notificação visual para feedback de ações
+window.mostrarNotificacao = function(msg, tipo='info') {
+  if(document.getElementById('notificacaoSistema')) document.getElementById('notificacaoSistema').remove();
+  const notif = document.createElement('div');
+  notif.id = 'notificacaoSistema';
+  notif.style.position = 'fixed';
+  notif.style.top = '32px';
+  notif.style.right = '32px';
+  notif.style.background = tipo==='sucesso' ? '#43a047' : (tipo==='erro' ? '#e53935' : '#1976d2');
+  notif.style.color = '#fff';
+  notif.style.padding = '16px 32px';
+  notif.style.borderRadius = '12px';
+  notif.style.fontWeight = 'bold';
+  notif.style.fontSize = '1.15em';
+  notif.style.boxShadow = '0 2px 12px #0003';
+  notif.style.zIndex = '10010';
+  notif.style.opacity = '0';
+  notif.style.transition = 'opacity 0.3s';
+  notif.innerHTML = msg;
+  document.body.appendChild(notif);
+  setTimeout(()=>{notif.style.opacity='1';},50);
+  setTimeout(()=>{notif.style.opacity='0';setTimeout(()=>notif.remove(),400);}, 2600);
+}
+}
+// Aplica personalização salva ao carregar
+window.addEventListener('DOMContentLoaded', function() {
+  const corSalva = localStorage.getItem('corDestaque');
+  if (corSalva) {
+    document.documentElement.style.setProperty('--cor-destaque', corSalva);
+    document.querySelectorAll('button, #btnTema').forEach(btn => btn.style.background = corSalva);
+    document.querySelectorAll('.header, .footer').forEach(h => h.style.background = corSalva);
+  }
+  const fonteSalva = localStorage.getItem('fonteSistema');
+  if (fonteSalva) {
+    document.documentElement.style.setProperty('--fonte', fonteSalva + ", 'Segoe UI', Arial, sans-serif");
+    document.documentElement.style.setProperty('--fonte-titulo', fonteSalva + ", 'Segoe UI', Arial, sans-serif");
+    document.documentElement.style.setProperty('--fonte-padrao', fonteSalva + ", 'Segoe UI', Arial, sans-serif");
+    document.body.style.fontFamily = fonteSalva + ", 'Segoe UI', Arial, sans-serif";
+  }
+  const tamSalvo = localStorage.getItem('tamFonte');
+  if (tamSalvo) {
+    document.documentElement.style.setProperty('--tam-fonte', tamSalvo + 'em');
+    document.body.style.fontSize = tamSalvo + 'em';
+  }
+});
+</script>
+      <nav style="display:flex;flex-direction:column;height:100%;">
+        <div style="flex:1 1 auto;display:flex;flex-direction:column;gap:0;">
+         <a href="#" id="menu-clientes" class="ativo" onclick="mostrarModulo('clientes', this)">👤 Clientes</a>
+         <a href="#" id="menu-reclamacoes" onclick="mostrarModulo('reclamacoes', this)">💬 Reclamações</a>
+         <a href="#" id="menu-sac" onclick="mostrarModulo('sac', this)">📞 SAC</a>
+         <a href="#" id="menu-conserto" onclick="mostrarModulo('conserto', this)">🛠️ Conserto</a>
+
+        </div>
+        <div style="flex-shrink:0;display:flex;justify-content:center;align-items:flex-end;padding-bottom:32px;padding-top:18px;">
+          <button id="btnSairSistema" class="btn-sair-circular" title="Sair do sistema">
+            <span class="icon-sair-circular">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="15" fill="#fff" stroke="#e53935" stroke-width="2"/>
+                <path d="M16 8v8" stroke="#e53935" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="16" cy="22.5" r="2.5" fill="#e53935"/>
+              </svg>
+            </span>
+          </button>
+        </div>
+      </nav>
+<script>
+// Garante que apenas o módulo inicial (clientes) esteja visível ao carregar
+window.addEventListener('DOMContentLoaded', function() {
+  window.mostrarModulo('clientes', document.getElementById('menu-clientes'));
+});
+    // Botão Sair circular moderno com animação e tooltip
+    const btnSair = document.getElementById('btnSairSistema');
+    if (btnSair) {
+      btnSair.onclick = function() {
+        btnSair.classList.add('animando-sair-circular');
+        setTimeout(() => {
+          if (confirm('Tem certeza que deseja sair da conta?')) {
+            if (window.logoutUsuario) window.logoutUsuario();
+          } else {
+            btnSair.classList.remove('animando-sair-circular');
+          }
+        }, 500);
+      };
+      // Tooltip customizado
+      btnSair.onmouseenter = function() {
+        let tip = document.createElement('div');
+        tip.className = 'tooltip-sair-circular';
+        tip.textContent = 'Sair da conta';
+        document.body.appendChild(tip);
+        setTimeout(() => {
+          const rect = btnSair.getBoundingClientRect();
+          const tipRect = tip.getBoundingClientRect();
+          tip.style.left = (rect.left + rect.width/2 - tipRect.width/2) + 'px';
+          tip.style.top = (rect.top - tipRect.height - 10) + 'px';
+        }, 1);
+        btnSair._tooltip = tip;
+      };
+      btnSair.onmouseleave = function() {
+        if (btnSair._tooltip) btnSair._tooltip.remove();
+      };
+    }
+  </script>
+<style>
+.btn-sair-circular {
+  margin-top: 32px;
+  margin-left: 5%;
+  width: 56px;
+  height: 56px;
+  background: #fff;
+  border: 2.5px solid #e53935;
+  border-radius: 50%;
+  box-shadow: 0 4px 18px #e5393533, 0 2px 8px #0002;
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+  transition: box-shadow 0.18s, border 0.18s, transform 0.18s, background 0.18s;
+  position: relative;
+  outline: none;
+}
+.btn-sair-circular:hover {
+  background: #ffeaea;
+  border-color: #b71c1c;
+  box-shadow: 0 8px 32px #e5393555, 0 2px 8px #0002;
+  transform: scale(1.08);
+}
+.btn-sair-circular:active {
+  background: #e53935;
+  border-color: #b71c1c;
+  transform: scale(0.97);
+}
+.icon-sair-circular {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  transition: filter 0.18s;
+}
+.btn-sair-circular.animando-sair-circular {
+  animation: sair-circular-pulse 0.6s linear infinite alternate;
+  opacity: 0.85;
+}
+@keyframes sair-circular-pulse {
+  0% { box-shadow: 0 4px 18px #e5393533, 0 2px 8px #0002; }
+  100% { box-shadow: 0 8px 32px #b71c1c88, 0 2px 8px #0002; }
+}
+.tooltip-sair-circular {
+  position: fixed;
+  background: #222;
+  color: #fff;
+  font-size: 1em;
+  padding: 7px 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px #0005;
+  z-index: 99999;
+  pointer-events: none;
+  opacity: 0.97;
+  transition: opacity 0.18s;
+  min-width: 110px;
+  max-width: 220px;
+  white-space: nowrap;
+  text-align: center;
+}
+</style>
+      </nav>
+    </aside>
+  <div style="flex:1;display:flex;flex-direction:column;min-height:100vh;">
+      <header class="header" style="display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:80px;">
+        <div class="header-glass" style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:24px;">
+          <div class="avatar-glow" style="display:flex;align-items:center;justify-content:center;">
+            <img id="avatarUsuario" src="https://ui-avatars.com/api/?name=Usuário&background=1976d2&color=fff&rounded=true&size=96" alt="Avatar" class="avatar-animado avatar-menor" title="Clique para personalizar">
+          </div>
+          <span id="saudacaoUsuario" class="saudacao-neon saudacao-menor">Olá, Usuário! | DOUDGE PÓS-VENDAS</span>
+          <button id="btnTema" onclick="alternarTema()" class="btn-tema-animado btn-tema-menor"><span class="icon-tema">🌙</span> Tema Escuro</button>
+        </div>
+<style>
+.header {
+  background: transparent !important;
+  box-shadow: none !important;
+  margin-bottom: 18px;
+}
+.header-glass {
+  background: linear-gradient(120deg, #1976d2cc 60%, #43a047cc 100%);
+  box-shadow: 0 4px 32px #1976d244, 0 2px 8px #0001;
+  border-radius: 0 0 24px 24px;
+  padding: 8px 16px 8px 16px;
+  min-height: 48px;
+  backdrop-filter: blur(12px) saturate(1.1);
+  border: 1.5px solid #fff3;
+  animation: gradienteHeader 8s linear infinite alternate;
+}
+@keyframes gradienteHeader {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+.avatar-glow {
+  border-radius: 50%;
+  padding: 6px;
+  background: radial-gradient(circle, #fffde7 0%, #1976d2 80%, transparent 100%);
+  box-shadow: 0 0 24px #1976d2cc, 0 0 0 8px #fffde744;
+  transition: box-shadow 0.22s;
+}
+.avatar-animado {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 3.5px solid #fff;
+  box-shadow: 0 2px 8px #1976d244;
+  transition: box-shadow 0.22s, border-color 0.18s, transform 0.18s;
+}
+.avatar-menor {
+  width: 38px !important;
+  height: 38px !important;
+}
+.avatar-animado:hover {
+  box-shadow: 0 8px 32px #43a047cc, 0 0 0 7px #fffde7, 0 0 18px #fffde7;
+  border-color: #ffd600;
+  transform: scale(1.09) rotate(-2deg);
+}
+.saudacao-neon {
+  flex:1;
+  text-align:center;
+  font-size:2.2em;
+  font-weight:900;
+  color:#fff;
+  text-shadow:0 0 8px #43a047,0 2px 12px #1976d2,0 0 18px #fffde7,0 1px 0 #1976d2;
+  letter-spacing:1px;
+  line-height:1.1;
+  cursor:pointer;
+  display:inline-block;
+  filter:brightness(1.15) drop-shadow(0 0 8px #fffde7);
+  animation: neonPulse 2.2s infinite alternate;
+}
+.saudacao-menor {
+  font-size: 1.1em !important;
+  font-weight: 700 !important;
+  padding: 0 4px;
+}
+@keyframes neonPulse {
+  0% { text-shadow:0 0 8px #43a047,0 2px 12px #1976d2,0 0 18px #fffde7,0 1px 0 #1976d2; }
+  100% { text-shadow:0 0 18px #43a047,0 2px 24px #1976d2,0 0 32px #fffde7,0 1px 0 #1976d2; }
+}
+.btn-tema-animado {
+  background: linear-gradient(90deg,#111 60%,#43a047 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 8px 18px;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 1em;
+  box-shadow: 0 2px 8px #0003,0 0 0 2px #43a04744;
+  transition: background 0.18s,box-shadow 0.18s,transform 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+.btn-tema-menor {
+  font-size: 0.95em !important;
+  padding: 6px 12px !important;
+  border-radius: 8px !important;
+}
+.btn-tema-animado:hover {
+  background:linear-gradient(90deg,#43a047 60%,#1976d2 100%);
+  color: #fffde7;
+  box-shadow: 0 8px 32px #43a04788, 0 0 0 7px #fffde7;
+  transform: scale(1.04);
+}
+.icon-tema {
+  display:inline-block;
+  font-size:1.2em;
+  animation: girarTema 2.5s linear infinite;
+}
+@keyframes girarTema {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@media (max-width: 900px) {
+  .header-glass { flex-direction: column !important; gap: 12px !important; padding:12px 8px 12px 8px !important; }
+  .saudacao-neon { font-size: 1.1em !important; }
+  .btn-tema-animado { font-size: 1em !important; padding: 10px 18px !important; }
+  .avatar-animado { width: 38px !important; height: 38px !important; }
+}
+</style>
+      </header>
+<style>
+#personalizarHome:hover {
+  color: #fffde7;
+  text-shadow: 0 4px 16px #ffd60099, 0 0 8px #fffde7;
+  text-decoration: underline wavy #ffd600 1.5px;
+}
+#atalhosHome button:hover {
+  background: #f5f5f5;
+  filter: brightness(1.08);
+}
+</style>
+      <script>
+        // Saudação dinâmica com nome do usuário (simulado)
+        function atualizarSaudacao() {
+          const nome = localStorage.getItem('nomeUsuario') || 'Usuário';
+          const hora = new Date().getHours();
+          let saudacao = 'Olá';
+          if (hora >= 5 && hora < 12) saudacao = 'Bom dia';
+          else if (hora >= 12 && hora < 18) saudacao = 'Boa tarde';
+          else saudacao = 'Boa noite';
+          document.getElementById('saudacaoUsuario').textContent = `${saudacao}, ${nome}! | DOUDGE PÓS-VENDAS`;
+        }
+        atualizarSaudacao();
+        // Permite ao usuário personalizar o nome
+        document.getElementById('saudacaoUsuario').onclick = function() {
+          abrirModalNomeUsuario();
+        };
+        // Avatar personalizável
+        document.getElementById('avatarUsuario').onclick = function() {
+          abrirModalNomeUsuario();
+        };
+      // Modal customizado para nome do usuário
+      function abrirModalNomeUsuario() {
+        if (document.getElementById('modalNomeUsuario')) return;
+        const modal = document.createElement('div');
+        modal.id = 'modalNomeUsuario';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100vw';
+        modal.style.height = '100vh';
+        modal.style.background = 'rgba(0,0,0,0.35)';
+        modal.style.zIndex = '99999';
+        modal.style.display = 'flex';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+        modal.innerHTML = `<div style='background:#fff;padding:32px 28px;border-radius:16px;max-width:350px;width:100%;box-shadow:0 4px 24px #0003;position:relative;text-align:center;'>
+          <button onclick='document.getElementById("modalNomeUsuario").remove()' style='position:absolute;top:12px;right:12px;background:#e53935;color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;'>×</button>
+          <h3 style='color:#1976d2;margin-bottom:12px;'>Seu nome</h3>
+          <input id='inputNomeUsuario' type='text' maxlength='32' style='width:90%;padding:8px 12px;font-size:17px;border-radius:8px;border:1.5px solid #1976d2;margin-bottom:18px;' placeholder='Digite seu nome'>
+          <br>
+          <button id='btnSalvarNomeUsuario' style='background:#1976d2;color:#fff;font-weight:bold;padding:8px 24px;border:none;border-radius:8px;cursor:pointer;font-size:16px;'>Salvar</button>
+        </div>`;
+        document.body.appendChild(modal);
+        document.getElementById('inputNomeUsuario').focus();
+        document.getElementById('btnSalvarNomeUsuario').onclick = function() {
+          const nome = document.getElementById('inputNomeUsuario').value.trim();
+          if (nome) {
+            localStorage.setItem('nomeUsuario', nome);
+            atualizarSaudacao();
+            document.getElementById('avatarUsuario').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(nome)}&background=1976d2&color=fff&rounded=true&size=48`;
+            window.mostrarNotificacao('Nome atualizado!', 'sucesso');
+            modal.remove();
+          } else {
+            window.mostrarNotificacao('Digite um nome válido!', 'erro');
+          }
+        };
+      }
+        // Atualiza avatar ao carregar
+        window.addEventListener('DOMContentLoaded', function() {
+          const nome = localStorage.getItem('nomeUsuario') || 'Usuário';
+          document.getElementById('avatarUsuario').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(nome)}&background=1976d2&color=fff&rounded=true&size=48`;
+        });
+      </script>
+  <!-- Barra de progresso animada -->
+  <div id="barraProgresso" style="display:none;position:fixed;top:0;left:0;width:0;height:4px;background:#43a047;z-index:99999;transition:width 0.4s;"></div>
+  <script>
+    // Barra de progresso animada para carregamento
+    window.mostrarBarraProgresso = function() {
+      const barra = document.getElementById('barraProgresso');
+      barra.style.display = 'block';
+      barra.style.width = '0';
+      setTimeout(()=>{barra.style.width = '80%';}, 80);
+    };
+    window.ocultarBarraProgresso = function() {
+      const barra = document.getElementById('barraProgresso');
+      barra.style.width = '100%';
+      setTimeout(()=>{
+        barra.style.display = 'none';
+        barra.style.width = '0';
+      }, 400);
+    };
+    // Tooltips nos botões principais
+    document.querySelectorAll('button').forEach(btn => {
+      if(!btn.title) btn.title = btn.textContent.trim();
+    });
+  </script>
+  <style>
+    /* Efeito card com sombra ao passar mouse nos módulos */
+    .card {
+      transition: box-shadow 0.22s, transform 0.18s;
+    }
+    .card:hover {
+      box-shadow: 0 8px 32px #1976d244, 0 2px 8px #0002;
+      transform: translateY(-2px) scale(1.012);
+    }
+    /* Barra de progresso animada */
+    #barraProgresso {
+      box-shadow: 0 2px 8px #43a04788;
+    }
+  </style>
+  <script>
+    // Alternância de tema escuro/claro
+    function alternarTema() {
+      const temaAtual = document.body.classList.toggle('tema-escuro');
+      localStorage.setItem('temaEscuro', document.body.classList.contains('tema-escuro'));
+      document.getElementById('btnTema').textContent = document.body.classList.contains('tema-escuro') ? '☀️ Tema Claro' : '🌙 Tema Escuro';
+    }
+    // Aplica tema salvo ao carregar
+    window.addEventListener('DOMContentLoaded', function() {
+      if (localStorage.getItem('temaEscuro') === 'true') {
+        document.body.classList.add('tema-escuro');
+        document.getElementById('btnTema').textContent = '☀️ Tema Claro';
+      }
+    });
+  </script>
+  <style>
+    body.tema-escuro {
+      background: #181c24 !important;
+      color: #e3e3e3 !important;
+    }
+    body.tema-escuro .header, body.tema-escuro .footer {
+      background: #232a3a !important;
+      color: #fff !important;
+    }
+    body.tema-escuro .card, body.tema-escuro .main-content, body.tema-escuro .sidebar {
+      background: #232a3a !important;
+      color: #e3e3e3 !important;
+    }
+    body.tema-escuro input, body.tema-escuro textarea, body.tema-escuro select {
+      background: #232a3a !important;
+      color: #fff !important;
+      border-color: #1976d2 !important;
+    }
+    body.tema-escuro table, body.tema-escuro th, body.tema-escuro td {
+      background: #232a3a !important;
+      color: #e3e3e3 !important;
+    }
+    body.tema-escuro button {
+      background: #1976d2 !important;
+      color: #fff !important;
+    }
+    body.tema-escuro .sidebar nav a.active {
+      background: #1976d2 !important;
+      color: #fff !important;
+    }
+  </style>
+      <main class="main-content">
+  <!-- Conteúdo dos módulos -->
+
+      <div id="modulo-conserto" class="card hidden" style="margin-top:0;">
+        <h2 style="margin-top:0;">Conserto</h2>
+        <div style="margin-bottom:16px;display:flex;gap:12px;">
+          <button onclick="mostrarSubpasta('registro-conserto')" style="background:#43a047;color:#fff;font-weight:bold;padding:8px 18px;border:none;border-radius:6px;box-shadow:0 2px 8px #0002;cursor:pointer;">Cadastro</button>
+          <button onclick="mostrarSubpasta('consulta-conserto')" style="background:#1976d2;color:#fff;font-weight:bold;padding:8px 18px;border:none;border-radius:6px;box-shadow:0 2px 8px #0002;cursor:pointer;">Consultar</button>
+        </div>
+        <div id="registro-conserto" class="hidden">
+          <h3>Registrar Conserto 🛠️</h3>
+          <form onsubmit="event.preventDefault(); registrarConsertoAcao();">
+            <label>Empresa:</label>
+            <input type="text" id="empresaConserto" required>
+            <label>CNPJ:</label>
+            <input type="text" id="cnpjConserto" maxlength="18" placeholder="00.000.000/0000-00" required>
+            <label>Produto:</label>
+            <input type="text" id="produtoConserto" required>
+            <label>Descrição do Defeito:</label>
+            <input type="text" id="defeitoConserto" required>
+            <button type="submit" style="background:#43a047;color:#fff;">Registrar</button>
+          </form>
+          <div id="mensagemConserto" style="margin-top:10px;"></div>
+        </div>
+        <div id="consulta-conserto" class="hidden">
+          <h3>Consulta de Consertos 🔎</h3>
+          <input type="text" id="buscaConserto" placeholder="Buscar conserto..." oninput="filtrarConsertos()" style="margin-bottom:8px;">
+          <button onclick="consultarConsertosAcao()" style="background:#1976d2;color:#fff;">Consultar</button>
+          <div id="corpoTabelaConsertos" style="margin-top:12px;"></div>
+        </div>
+      </div>
+      <div id="modulo-clientes" class="card hidden">
+        <h2>Clientes</h2>
+        <div style="margin-bottom:16px;">
+          <button onclick="mostrarSubpasta('cadastro-clientes')">Cadastro</button>
+          <button onclick="mostrarSubpasta('consulta-clientes')">Consulta</button>
+        </div>
+        <div id="cadastro-clientes" class="hidden">
+          <h3>Cadastro de Cliente 👤</h3>
+          <form onsubmit="event.preventDefault(); cadastrarClienteAcao();">
+            <label>Nome:</label>
+            <input type="text" id="nomeCliente" required>
+            <label>Email:</label>
+            <input type="email" id="emailCliente" required>
+            <label>CNPJ:</label>
+            <input type="text" id="cnpjCliente" maxlength="18" placeholder="00.000.000/0000-00">
+            <label>Nome da Empresa:</label>
+            <input type="text" id="empresaCliente" placeholder="Empresa do cliente">
+            <label>Endereço:</label>
+            <input type="text" id="enderecoCliente" placeholder="Rua, número, bairro, cidade">
+            <button type="submit" style="background:#43a047;color:#fff;">Cadastrar</button>
+          </form>
+          <div id="mensagemCliente" style="margin-top:10px;"></div>
+        </div>
+        <div id="consulta-clientes" class="hidden">
+          <h3>Consulta de Clientes 🔎</h3>
+          <input type="text" id="buscaCliente" placeholder="Buscar cliente..." style="margin-bottom:8px;">
+          <button onclick="consultarClientesAcao()" style="background:#111;color:#fff;font-weight:bold;">Consultar</button>
+          <div id="tabelaClientesBox" style="margin-top:18px;"></div>
+        </div>
+      </div>
+      <div id="modulo-relatorios" class="card hidden">
+        <h2>Relatórios</h2>
+        <div style="margin-bottom:16px;">
+          <button onclick="mostrarSubpasta('geracao-relatorios')">Geração</button>
+          <button onclick="mostrarSubpasta('exportacao-relatorios')">Exportação</button>
+        </div>
+        <div id="geracao-relatorios" class="hidden">
+          <h3>Geração de Relatório 📊</h3>
+          <button onclick="gerarRelatorioAcao()" style="background:#43a047;color:#fff;">Gerar Relatório</button>
+          <div id="mensagemRelatorio" style="margin-top:10px;"></div>
+        </div>
+        <div id="exportacao-relatorios" class="hidden">
+          <h3>Exportação de Relatório 📤</h3>
+          <button onclick="exportarRelatorioAcao()" style="background:#1976d2;color:#fff;">Exportar Relatório</button>
+          <div id="mensagemExportacao" style="margin-top:10px;"></div>
+        </div>
+      </div>
+      <div id="modulo-reclamacoes" class="card hidden">
+        <h2>Reclamações</h2>
+        <div style="margin-bottom:16px;">
+          <button onclick="mostrarSubpasta('registro-reclamacoes')">Registrar</button>
+          <button onclick="mostrarSubpasta('consulta-reclamacoes')">Consultar</button>
+        </div>
+        <div id="registro-reclamacoes" class="hidden">
+          <h3>Registrar Reclamação 💬</h3>
+          <button id="btnAbrirFormReclamacao" type="button" style="background:#e53935;color:#fff;font-weight:bold;padding:6px 18px;border:none;border-radius:6px;box-shadow:0 2px 8px #0002;cursor:pointer;transition:background 0.2s;">Abrir Formulário</button>
+          <div id="formReclamacao" style="display:none;margin-top:18px;max-width:700px;background:#fff;border:2px solid #1976d2;border-radius:10px;padding:18px;box-shadow:0 2px 12px #1976d222;">
+            <h3 style="color:#1976d2;text-align:center;margin-bottom:8px;font-size:22px;font-family:'Segoe UI',Arial,sans-serif;letter-spacing:1px;display:flex;align-items:center;justify-content:center;gap:8px;">
+
+              <span>📄</span> Formulário para Análise da Reclamação do Cliente via SAC
+            </h3>
+            <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
+              <div style="flex:1;min-width:180px;">
+                <label><span style="color:#1976d2;font-weight:bold;">#</span> Pedido de vendas:</label>
+                <input type="text" style="width:100%;margin-bottom:4px;border:2px solid #1976d2;border-radius:6px;">
+              </div>
+              <div style="flex:1;min-width:180px;">
+                <label><span style="color:#1976d2;font-weight:bold;">📅</span> Data de abertura:</label>
+                <input type="date" style="width:100%;margin-bottom:4px;border:2px solid #1976d2;border-radius:6px;">
+              </div>
+              <div style="flex:1;min-width:180px;">
+                <label><span style="color:#1976d2;font-weight:bold;">🏢</span> Empresa:</label>
+                <input type="text" style="width:100%;margin-bottom:4px;border:2px solid #1976d2;border-radius:6px;">
+              </div>
+              <div style="flex:1;min-width:180px;">
+                <label><span style="color:#1976d2;font-weight:bold;">🆔</span> CNPJ do cliente:</label>
+                <input type="text" style="width:100%;margin-bottom:4px;border:2px solid #1976d2;border-radius:6px;">
+              </div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
+              <div style="flex:1;min-width:180px;">
+                <label><span style="color:#1976d2;font-weight:bold;">👤</span> Contato da empresa:</label>
+                <input type="text" style="width:100%;margin-bottom:4px;border:2px solid #1976d2;border-radius:6px;">
+              </div>
+              <div style="flex:1;min-width:180px;">
+                <label><span style="color:#1976d2;font-weight:bold;">📞</span> Telefone:</label>
+                <input type="text" style="width:100%;margin-bottom:4px;border:2px solid #1976d2;border-radius:6px;">
+              </div>
+            </div>
+            <div style="margin-bottom:8px;">
+              <label><span style="color:#e53935;font-weight:bold;">❗</span> Reclamação:</label>
+              <textarea rows="2" style="width:100%;margin-bottom:4px;border:2px solid #e53935;border-radius:6px;"></textarea>
+              <span style="font-size:12px;color:#1976d2;">Conceito de Reclamação: Não atendimento de um requisito preestabelecido ou contratado pelo Cliente que originou a Insatisfação com posterior Reclamação.</span>
+            </div>
+            <div style="margin-bottom:8px;">
+              <label><span style="color:#1976d2;font-weight:bold;">👤</span> Responsável pela abertura:</label>
+              <input type="text" style="width:100%;margin-bottom:4px;border:2px solid #1976d2;border-radius:6px;">
+            </div>
+            <div style="margin-bottom:8px;">
+              <label><span style="color:#e53935;font-weight:bold;">🔎</span> Causa Raiz:</label>
+              <textarea rows="2" style="width:100%;margin-bottom:4px;border:2px solid #e53935;border-radius:6px;"></textarea>
+              <span style="font-size:12px;color:#1976d2;">Conceito da Causa Raiz: Fato gerador da Reclamação podendo ser pontual ou um processo.</span>
+            </div>
+            <div style="margin-bottom:8px;">
+              <label><span style="color:#1976d2;font-weight:bold;">👤</span> Responsável pela causa raiz:</label>
+              <input type="text" style="width:100%;margin-bottom:4px;border:2px solid #1976d2;border-radius:6px;">
+            </div>
+            <div style="margin-bottom:8px;">
+              <label><span style="color:#43a047;font-weight:bold;">🛠️</span> Ação Corretiva e Preventiva:</label>
+              <textarea rows="2" style="width:100%;margin-bottom:4px;border:2px solid #43a047;border-radius:6px;"></textarea>
+              <span style="font-size:12px;color:#1976d2;">Ação Corretiva: Ação imediata implementada para uma reclamação reportada evitando a recorrência da mesma.<br>Ação Preventiva: Ação a ser proposta como aprimoramento e prevenção da recorrência.</span>
+            </div>
+            <div style="margin-bottom:8px;">
+              <label><span style="color:#1976d2;font-weight:bold;">👤</span> Responsável pela ação corretiva:</label>
+              <input type="text" style="width:100%;margin-bottom:4px;border:2px solid #1976d2;border-radius:6px;">
+            </div>
+            <div style="margin-bottom:8px;">
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-bottom:6px;">
+                <span style="color:#1976d2;font-weight:bold;font-size:1.08em;display:flex;align-items:center;gap:6px;"><span style="font-size:1.2em;">✅</span> Fechamento da Reclamação (SAC):</span>
+                <label style="display:flex;align-items:center;gap:4px;font-weight:600;color:#1976d2;background:#e3f2fd;padding:4px 12px;border-radius:8px;box-shadow:0 1px 4px #1976d211;">
+                  <input type="checkbox" id="reclamacaoProcedenteSim" style="accent-color:#43a047;"> Sim
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-weight:600;color:#e53935;background:#ffebee;padding:4px 12px;border-radius:8px;box-shadow:0 1px 4px #e5393511;">
+                  <input type="checkbox" id="reclamacaoProcedenteNao" style="accent-color:#e53935;"> Não
+                </label>
+                <span style="margin-left:0;font-size:1em;color:#1976d2;font-weight:500;">Departamento que originou a reclamação:</span>
+                <input type="text" style="width:180px;margin-bottom:0;border:2px solid #1976d2;border-radius:6px;padding:4px 8px;">
+              <input type="text" id="departamentoOrigemInput" placeholder="Ex: Logística, Vendas, Qualidade..." style="width:220px;margin-bottom:0;border:2.5px solid #1976d2;border-radius:7px;padding:6px 10px;font-weight:bold;background:#e3f2fd;">
+              </div>
+            </div>
+            <div style="margin-bottom:8px;">
+              <label style="color:#1976d2;font-weight:bold;font-size:1.08em;display:flex;align-items:center;gap:6px;"><span style="font-size:1.2em;">📋</span> Disposição:</label>
+              <textarea rows="3" style="width:100%;margin-bottom:4px;border:2px solid #1976d2;border-radius:8px;padding:8px 10px;font-size:1.08em;background:#f6f8fc;"></textarea>
+              <span style="font-size:12px;color:#1976d2;display:block;margin-top:2px;">Conceito da Disposição: Medida imediata combinada com o Cliente para solucionar a Reclamação com a maior brevidade possível.</span>
+            </div>
+            <div style="margin-bottom:8px;">
+              <label style="color:#e53935;font-weight:bold;font-size:1.08em;display:flex;align-items:center;gap:6px;"><span style="font-size:1.2em;">💸</span> Despesas operacionais da não conformidade:</label>
+              <div style="display:flex;flex-wrap:wrap;gap:12px 18px;background:#fff3e0;padding:10px 8px 6px 8px;border-radius:10px;margin-top:2px;box-shadow:0 1px 6px #e5393508;">
+                <div style="flex:1;min-width:120px;display:flex;flex-direction:column;gap:2px;">
+                  <label style="font-weight:600;color:#b71c1c;">Venda perdida:</label>
+                  <input type="text" style="width:100%;margin-bottom:0;border:2px solid #e53935;border-radius:6px;padding:4px 8px;background:#fff;">
+                </div>
+                <div style="flex:1;min-width:120px;display:flex;flex-direction:column;gap:2px;">
+                  <label style="font-weight:600;color:#b71c1c;">Frete / Logística reversa:</label>
+                  <input type="text" style="width:100%;margin-bottom:0;border:2px solid #e53935;border-radius:6px;padding:4px 8px;background:#fff;">
+                </div>
+                <div style="flex:1;min-width:120px;display:flex;flex-direction:column;gap:2px;">
+                  <label style="font-weight:600;color:#b71c1c;">Outras despesas:</label>
+                  <input type="text" style="width:100%;margin-bottom:0;border:2px solid #e53935;border-radius:6px;padding:4px 8px;background:#fff;">
+                </div>
+                <div style="flex:1;min-width:120px;display:flex;flex-direction:column;gap:2px;">
+                  <label style="font-weight:600;color:#b71c1c;">R$:</label>
+                  <input type="text" style="width:100%;margin-bottom:0;border:2px solid #e53935;border-radius:6px;padding:4px 8px;background:#fff;">
+                </div>
+                <div style="flex:1;min-width:120px;display:flex;flex-direction:column;gap:2px;">
+                  <label style="font-weight:600;color:#b71c1c;">Cancelamento boletos:</label>
+                  <input type="text" style="width:100%;margin-bottom:0;border:2px solid #e53935;border-radius:6px;padding:4px 8px;background:#fff;">
+                </div>
+              </div>
+            </div>
+            <div style="margin-bottom:8px;display:flex;align-items:center;gap:18px;">
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;background:#e8f5e9;padding:10px 12px 8px 12px;border-radius:8px;">
+                <span style="color:#43a047;font-weight:bold;font-size:1.08em;display:flex;align-items:center;gap:6px;min-width:220px;"><span style="font-size:1.2em;">✔️</span> Disposição concluída e cliente satisfeito?</span>
+                <input type="checkbox" id="disposicaoSatisfatoria" style="accent-color:#43a047;">
+                <label for="disposicaoSatisfatoria" style="font-weight:500;color:#388e3c;min-width:160px;">Checar ligando para o cliente</label>
+                <label style="font-weight:500;color:#1976d2;min-width:180px;">Data do encerramento da reclamação:</label>
+                <input type="date" style="border:2px solid #43a047;border-radius:6px;padding:4px 8px;min-width:140px;">
+              </div>
+            </div>
+            <div style="text-align:center;margin-top:18px;">
+            <div style="display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:18px;">
+              <label style="font-weight:bold;font-size:1.13em;color:#232a3a;display:flex;align-items:center;gap:8px;background:#f6f8fc;padding:6px 18px 6px 12px;border-radius:10px;box-shadow:0 1px 6px #1976d211;">
+                <span style="color:#1976d2;font-size:1.2em;">⚖️</span> Procedente:
+                <label style="display:flex;align-items:center;gap:4px;font-weight:600;color:#43a047;margin-left:10px;">
+                  <input type="radio" name="procedenteRadio" id="procedenteSim" value="Sim" style="accent-color:#43a047;"> <span style="font-size:1.13em;">Sim</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-weight:600;color:#e53935;margin-left:10px;">
+                  <input type="radio" name="procedenteRadio" id="procedenteNao" value="Não" style="accent-color:#e53935;"> <span style="font-size:1.13em;">Não</span>
+                </label>
+              </label>
+            </div>
+              <button id="btnSalvarReclamacao" type="button" style="background:#1976d2;color:#fff;font-weight:bold;padding:10px 32px;border:none;border-radius:8px;box-shadow:0 2px 8px #1976d222;cursor:pointer;font-size:18px;">Salvar</button>
+              <div id="mensagemSalvarReclamacao" style="margin-top:10px;"></div>
+            </div>
+            <script>
+              document.getElementById('btnSalvarReclamacao').onclick = async function() {
+                // Coleta todos os dados do formulário
+                const form = document.getElementById('formReclamacao');
+                const pedido = form.querySelectorAll('input[type="text"]')[0]?.value || '';
+                const dataAbertura = form.querySelectorAll('input[type="date"]')[0]?.value || '';
+                const empresa = form.querySelectorAll('input[type="text"]')[1]?.value || '';
+                const cnpj = form.querySelectorAll('input[type="text"]')[2]?.value || '';
+                const contato = form.querySelectorAll('input[type="text"]')[3]?.value || '';
+                const telefone = form.querySelectorAll('input[type="text"]')[4]?.value || '';
+                const reclamacao = form.querySelectorAll('textarea')[0]?.value || '';
+                const responsavelAbertura = form.querySelectorAll('input')[6]?.value || '';
+                const causaRaiz = form.querySelectorAll('textarea')[1]?.value || '';
+                const responsavelCausaRaiz = form.querySelectorAll('input')[7]?.value || '';
+                const acaoCorretivaPreventiva = form.querySelectorAll('textarea')[2]?.value || '';
+                const responsavelAcaoCorretiva = form.querySelectorAll('input')[8]?.value || '';
+                // Procedente via radio
+                let procedente = '';
+                if (form.querySelector('input[name="procedenteRadio"]:checked')) {
+                  procedente = form.querySelector('input[name="procedenteRadio"]:checked').value;
+                }
+                const fechamentoSAC = procedente ? (procedente === 'Sim' ? 'Fechado' : 'Não Fechado') : '';
+                // Busca o campo de departamento de origem pelo id
+                const departamentoOrigemInput = form.querySelector('#departamentoOrigemInput');
+                const departamentoOrigem = departamentoOrigemInput ? departamentoOrigemInput.value.trim() : '';
+                if (!departamentoOrigem) {
+                  departamentoOrigemInput.style.borderColor = '#e53935';
+                  departamentoOrigemInput.focus();
+                  document.getElementById('mensagemSalvarReclamacao').innerHTML = '<span style="color:#e53935;font-weight:bold;font-size:15px;">Preencha o campo Departamento que originou a reclamação!</span>';
+                  setTimeout(function(){
+                    document.getElementById('mensagemSalvarReclamacao').innerHTML = '';
+                    departamentoOrigemInput.style.borderColor = '#1976d2';
+                  }, 2500);
+                  return;
+                }
+                const disposicao = form.querySelectorAll('textarea')[3]?.value || '';
+                // Coleta campos de despesas e força valor numérico ou vazio
+                function getNumericInput(idx) {
+                  const val = form.querySelectorAll('input[type="text"]')[idx]?.value.replace(/[^\d,\.]/g, '').replace(',', '.');
+                  return val && !isNaN(Number(val)) ? Number(val).toFixed(2).replace('.', ',') : '0,00';
+                }
+                const vendaPerdida = getNumericInput(5);
+                const freteLogistica = getNumericInput(6);
+                const outrasDespesas = getNumericInput(7);
+                const valorDespesas = getNumericInput(8);
+                const cancelamentoBoletos = getNumericInput(9);
+                const disposicaoSatisfatoria = form.querySelector('#disposicaoSatisfatoria')?.checked || false;
+                const dataEncerramento = form.querySelectorAll('input[type="date"]')[1]?.value || '';
+                try {
+                  await window.salvarReclamacaoFirebase({ pedido, dataAbertura, empresa, cnpj, contato, telefone, reclamacao, responsavelAbertura, causaRaiz, responsavelCausaRaiz, acaoCorretivaPreventiva, responsavelAcaoCorretiva, procedente, fechamentoSAC, departamentoOrigem, disposicao, vendaPerdida, freteLogistica, outrasDespesas, valorDespesas, cancelamentoBoletos, disposicaoSatisfatoria, dataEncerramento });
+                  document.getElementById('mensagemSalvarReclamacao').innerHTML = '<span style="color:#43a047;font-weight:bold;font-size:16px;">Formulário salvo no banco de dados!</span>';
+                } catch (e) {
+                  document.getElementById('mensagemSalvarReclamacao').innerHTML = '<span style="color:#e53935;font-weight:bold;font-size:16px;">Erro ao salvar! ' + (e && e.message ? e.message : e) + '</span>';
+                  if (window.console && window.console.error) console.error('Erro ao salvar reclamação:', e);
+                }
+                setTimeout(function(){
+                  document.getElementById('mensagemSalvarReclamacao').innerHTML = '';
+                }, 2500);
+                // Limpa todos os campos do formulário
+                Array.from(form.querySelectorAll('input[type="text"], input[type="date"], textarea')).forEach(el => el.value = '');
+                Array.from(form.querySelectorAll('input[type="checkbox"]')).forEach(el => el.checked = false);
+                Array.from(form.querySelectorAll('input[type="radio"]')).forEach(el => el.checked = false);
+              };
+            </script>
+          </div>
+          <script>
+            document.getElementById('btnAbrirFormReclamacao').onclick = function() {
+              var form = document.getElementById('formReclamacao');
+              form.style.display = (form.style.display === 'none') ? 'block' : 'none';
+              // Ação visual ao registrar (simulação)
+              var btns = form.querySelectorAll('input,textarea');
+              btns.forEach(function(el){
+                el.onfocus = function(){el.style.background='#e3f2fd';};
+                el.onblur = function(){el.style.background='#fff';};
+              });
+            };
+          </script>
+        </div>
+        <div id="consulta-reclamacoes" class="hidden">
+          <h3>Consulta de Reclamações 🔎</h3>
+          <input type="text" id="buscaReclamacao" placeholder="Buscar reclamação..." oninput="filtrarReclamacoes()" style="margin-bottom:8px;">
+          <button onclick="consultarReclamacoesAcao()" style="background:#1976d2;color:#fff;">Consultar</button>
+          <ul id="listaReclamacoes"></ul>
+          <script>
+            document.querySelector('button[onclick="consultarReclamacoesAcao()"]')?.addEventListener('click', async function() {
+              const filtro = document.getElementById('buscaReclamacao').value;
+              await window.consultarReclamacoesFirebase(filtro);
+            });
+          </script>
+        </div>
+      </div>
+      <div id="modulo-sac" class="card hidden">
+  <div id="painelSACPersonalizado" style="background:linear-gradient(120deg,#f6f8fc 60%,#e3f2fd 100%);border:2.5px solid #1976d2;border-radius:18px;box-shadow:0 8px 32px #1976d233,0 2px 8px #0001;padding:32px 28px 24px 28px;margin-bottom:24px;animation:fadeInSAC 0.7s;">
+    <h2 style="color:#1976d2;font-size:2.1rem;font-weight:800;letter-spacing:2px;margin-bottom:10px;text-shadow:0 2px 8px #1976d211;display:flex;align-items:center;gap:12px;">
+      <span style='font-size:1.3em;'>💬</span> SAC
+    </h2>
+    <div style="height:3px;width:100px;background:linear-gradient(90deg,#1976d2 60%,#43a047 100%);border-radius:2px;margin-bottom:22px;"></div>
+    <div style="margin-bottom:16px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+          <button id="btnSacAtivoMenu" class="btn-sac" onclick="mostrarSAC('sac-ativo')">SAC Ativo</button>
+          <button id="btnInsatisfeitoMenu" class="btn-sac btn-insatisfeito" onclick="mostrarSAC('formInsatisfeito')">Insatisfeito!</button>
+          <button id="btnConsultarInsatisfeitos" class="btn-sac btn-ver-insatisfeitos" onclick="mostrarPainelInsatisfeitos()">Ver Insatisfeitos</button>
+          <style>
+            .btn-sac {
+              background: #111;
+              color: #fff;
+              font-weight: bold;
+              padding: 13px 32px;
+              border-radius: 14px;
+              border: none;
+              font-size: 1.15em;
+              box-shadow: 0 2px 8px #1976d222;
+              cursor: pointer;
+              transition: background 0.18s, box-shadow 0.18s, color 0.18s, transform 0.13s;
+              outline: none;
+              margin-right: 6px;
+              position: relative;
+              overflow: hidden;
+              min-width: 150px;
+              letter-spacing: 0.01em;
+            }
+            .btn-sac:hover {
+              background: #1976d2;
+              color: #fff;
+              box-shadow: 0 4px 16px #1976d244;
+              transform: translateY(-2px) scale(1.03);
+            }
+            .btn-sac:active {
+              background: #43a047;
+              color: #fff;
+              transform: scale(0.97);
+            }
+            .btn-sac:focus {
+              box-shadow: 0 0 0 3px #1976d255;
+            }
+            .btn-sac.selected, .btn-sac.active {
+              background: #1976d2;
+              color: #fff;
+              box-shadow: 0 4px 16px #1976d244;
+            }
+            .btn-insatisfeito {
+              background: #fff;
+              color: #e53935;
+              border: 2px solid #e53935;
+              box-shadow: 0 2px 8px #e5393522;
+            }
+            .btn-insatisfeito:hover {
+              background: #e53935;
+              color: #fff;
+              border-color: #b71c1c;
+            }
+            .btn-insatisfeito:active, .btn-insatisfeito.selected {
+              background: #e53935;
+              color: #fff;
+              border-color: #b71c1c;
+            }
+            .btn-ver-insatisfeitos {
+              background: #111;
+              color: #fff;
+              border: 2px solid #111;
+            }
+            .btn-ver-insatisfeitos:hover {
+              background: #43a047;
+              color: #fff;
+              border-color: #388e3c;
+            }
+            .btn-ver-insatisfeitos:active, .btn-ver-insatisfeitos.selected {
+              background: #43a047;
+              color: #fff;
+              border-color: #388e3c;
+            }
+            @keyframes fadeInSAC {
+              from { opacity:0; transform:translateY(30px); }
+              to { opacity:1; transform:translateY(0); }
+            }
+            @media (max-width: 600px) {
+              #painelSACPersonalizado { padding: 16px 4vw 12px 4vw; }
+              .btn-sac { min-width: 90px; font-size: 0.98em; padding: 10px 10px; }
+            }
+          </style>
+  </div>
+          <style>
+            .btn-sac {
+              background: #111;
+              color: #fff;
+              font-weight: bold;
+              padding: 10px 28px;
+              border-radius: 10px;
+              border: none;
+              font-size: 1.13em;
+              box-shadow: 0 2px 8px #1976d222;
+              cursor: pointer;
+              transition: background 0.18s, box-shadow 0.18s, color 0.18s, transform 0.13s;
+              outline: none;
+              margin-right: 4px;
+              position: relative;
+              overflow: hidden;
+            }
+            .btn-sac:active {
+              background: #1976d2;
+              color: #fff;
+              transform: scale(0.97);
+            }
+            .btn-sac:focus {
+              box-shadow: 0 0 0 3px #1976d255;
+            }
+            .btn-sac.selected, .btn-sac.active {
+              background: #1976d2;
+              color: #fff;
+              box-shadow: 0 4px 16px #1976d244;
+            }
+            .btn-insatisfeito {
+              background: #fff;
+              color: #e53935;
+              border: 2px solid #e53935;
+              box-shadow: 0 2px 8px #e5393522;
+            }
+            .btn-insatisfeito:active, .btn-insatisfeito.selected {
+              background: #e53935;
+              color: #fff;
+              border-color: #b71c1c;
+            }
+            .btn-ver-insatisfeitos {
+              background: #111;
+              color: #fff;
+              border: 2px solid #111;
+            }
+            .btn-ver-insatisfeitos:active, .btn-ver-insatisfeitos.selected {
+              background: #43a047;
+              color: #fff;
+              border-color: #388e3c;
+            }
+            .btn-sac .ripple {
+              position: absolute;
+              border-radius: 50%;
+              transform: scale(0);
+              animation: ripple 0.5s linear;
+              background: rgba(255,255,255,0.5);
+              pointer-events: none;
+            }
+            @keyframes ripple {
+              to {
+                transform: scale(2.5);
+                opacity: 0;
+              }
+            }
+          </style>
+          <script>
+            // Ripple effect para todos botões .btn-sac
+            document.querySelectorAll('.btn-sac').forEach(btn => {
+              btn.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple';
+                ripple.style.left = (e.offsetX || 0) + 'px';
+                ripple.style.top = (e.offsetY || 0) + 'px';
+                ripple.style.width = ripple.style.height = Math.max(btn.offsetWidth, btn.offsetHeight) + 'px';
+                btn.appendChild(ripple);
+                setTimeout(()=>ripple.remove(), 500);
+                // Estado ativo visual
+                document.querySelectorAll('.btn-sac').forEach(b=>b.classList.remove('selected','active'));
+                btn.classList.add('selected','active');
+              });
+            });
+          </script>
+<!-- Painel Insatisfeitos inline -->
+<div id="painelInsatisfeitos" style="display:none;margin-top:18px;background:#fff3e0;border:2px solid #e53935;border-radius:10px;padding:18px;box-shadow:0 2px 12px #e5393522;">
+  <h2 style="color:#e53935;margin-bottom:12px;display:flex;align-items:center;gap:10px;font-size:1.6rem;font-weight:bold;"><span style='font-size:1.7em;'>😡</span> Formulários Insatisfeitos Salvos</h2>
+  <div style="margin-bottom:14px;display:flex;gap:10px;align-items:center;">
+    <input id="pesquisaInsatisfeito" type="text" placeholder="Pesquisar por nome ou empresa..." style="flex:1;max-width:340px;padding:7px 12px;border-radius:7px;border:1.5px solid #e53935;font-size:1.08em;" oninput="window.filtrarInsatisfeitosUI && window.filtrarInsatisfeitosUI(this.value)">
+    <button onclick="window.filtrarInsatisfeitosUI && window.filtrarInsatisfeitosUI(document.getElementById('pesquisaInsatisfeito').value)" style="background:#e53935;color:#fff;font-weight:bold;padding:7px 18px;border-radius:7px;border:none;cursor:pointer;">🔎</button>
+  </div>
+  <div id="msgSemInsatisfeitos" style="display:none;color:#e53935;font-weight:bold;margin-bottom:16px;font-size:1.1em;">Nenhum formulário insatisfeito encontrado.</div>
+  <div id="listaInsatisfeitos" style="display:flex;flex-wrap:wrap;gap:22px 18px;min-height:80px;width:100%;justify-content:flex-start;"></div>
+</div>
+<style>
+  #painelInsatisfeitos .miniatura-sacativo {
+    display:inline-block;
+    background:linear-gradient(120deg,#fff,#fbe9e7 90%);
+    border-radius:12px;
+    padding:14px 16px 12px 16px;
+    margin:0;
+    box-shadow:0 2px 12px #e5393522,0 1.5px 4px #0001;
+    cursor:pointer;
+    width:240px;
+    vertical-align:top;
+    position:relative;
+    border:1.5px solid #e53935;
+    transition:box-shadow 0.18s,transform 0.15s,border-color 0.18s;
+  }
+  #painelInsatisfeitos .miniatura-sacativo:hover {
+    box-shadow:0 6px 24px #e5393544,0 2px 8px #0002;
+    border-color:#b71c1c;
+    transform:translateY(-2px) scale(1.025);
+    background:linear-gradient(120deg,#fff,#ffebee 90%);
+  }
+  #painelInsatisfeitos .miniatura-sacativo .titulo {
+    font-weight:bold;
+    color:#e53935;
+    font-size:1.13em;
+    margin-bottom:2px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  #painelInsatisfeitos .miniatura-sacativo .sub {
+    color:#333;
+    font-size:0.98em;
+    margin-bottom:2px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  #painelInsatisfeitos .miniatura-sacativo .data {
+    color:#888;
+    font-size:0.93em;
+    margin-bottom:2px;
+  }
+  #painelInsatisfeitos .miniatura-sacativo .notas {
+    color:#e53935;
+    font-size:0.97em;
+    margin-top:2px;
+  }
+</style>
+<script>
+function mostrarPainelInsatisfeitos() {
+  window.fecharAbas();
+  var painel = document.getElementById('painelInsatisfeitos');
+  if (painel) {
+    painel.style.display = 'block';
+    window.consultarInsatisfeitosFirebase();
+    setTimeout(()=>{
+      painel.scrollIntoView({behavior:'smooth',block:'center'});
+    }, 200);
+  }
+}
+</script>
+          <button id="btnConsultarSacAtivo" style="background:#1976d2;color:#fff;font-weight:bold;padding:4px 16px;border-radius:4px;cursor:pointer;" onclick="mostrarPainelSacAtivo()">🔎 Ver SAC Ativo</button>
+<script>
+// Mostra modal/aba de insatisfeitos ao clicar em Ver Insatisfeitos
+document.getElementById('btnConsultarInsatisfeitos').onclick = function() {
+  mostrarPainelInsatisfeitos();
+};
+</script>
+          <!-- Painel SAC Ativo inline -->
+          <div id="painelSacAtivo" style="display:none;margin-top:18px;background:#fff;border:2px solid #1976d2;border-radius:10px;padding:18px;box-shadow:0 2px 12px #1976d222;">
+            <h2 style="color:#1976d2;margin-bottom:12px;display:flex;align-items:center;gap:10px;font-size:1.5rem;font-weight:bold;letter-spacing:1px;">
+              <span style="font-size:1.7em;">📞</span> SAC Ativo - Formulários Salvos
+            </h2>
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:18px;">
+              <input id="inputBuscaSacAtivo" type="text" placeholder="🔍 Buscar por empresa, cliente, telefone..." style="padding:10px 18px;font-size:1.09em;border-radius:9px;border:2px solid #1976d2;min-width:260px;transition:border 0.18s, box-shadow 0.18s;outline:none;" onfocus="this.style.borderColor='#43a047';this.style.boxShadow='0 2px 8px #43a04733';" onblur="this.style.borderColor='#1976d2';this.style.boxShadow='none';">
+              <button id="btnBuscarSacAtivo" style="background:linear-gradient(90deg,#1976d2 80%,#43a047 100%);color:#fff;font-weight:bold;padding:10px 28px;border-radius:9px;cursor:pointer;font-size:1.08em;box-shadow:0 2px 8px #1976d222;border:none;transition:background 0.18s,box-shadow 0.18s;" onmouseover="this.style.background='#43a047';this.style.boxShadow='0 4px 16px #43a04733';" onmouseout="this.style.background='linear-gradient(90deg,#1976d2 80%,#43a047 100%)';this.style.boxShadow='0 2px 8px #1976d222';">🔎 Buscar</button>
+            </div>
+            <div id="listaSacAtivo" style="display:flex;flex-wrap:wrap;gap:18px;animation:fadeInSac 0.5s;"></div>
+            <style>
+              @keyframes fadeInSac {
+                from { opacity:0; transform:translateY(20px); }
+                to { opacity:1; transform:translateY(0); }
+              }
+              #painelSacAtivo:focus-within {
+                box-shadow:0 0 0 3px #43a04755;
+                border-color:#43a047;
+              }
+              #btnBuscarSacAtivo:active {
+                background:#115293;
+              }
+            </style>
+          </div>
+<script>
+function mostrarPainelSacAtivo() {
+  window.fecharAbas();
+  var painel = document.getElementById('painelSacAtivo');
+  if (painel) {
+    painel.style.display = 'block';
+    painel.style.animation = 'fadeInSac 0.5s';
+    window.consultarSacAtivoFirebase();
+    setTimeout(()=>{
+      document.getElementById('inputBuscaSacAtivo').focus();
+      painel.style.animation = '';
+    }, 250);
+  }
+}
+document.getElementById('btnBuscarSacAtivo').onclick = function() {
+  var termo = document.getElementById('inputBuscaSacAtivo').value.trim().toLowerCase();
+  window.consultarSacAtivoFirebase(termo);
+};
+document.getElementById('inputBuscaSacAtivo').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    document.getElementById('btnBuscarSacAtivo').click();
+  }
+});
+</script>
+        </div>
+<script>
+function mostrarSAC(id) {
+  // Oculta ambos os formulários
+  window.fecharAbas();
+  var sacAtivo = document.getElementById('sac-ativo');
+  var formInsatisfeito = document.getElementById('formInsatisfeito');
+  var el = document.getElementById(id);
+  if (el) {
+    el.classList.remove('hidden');
+    el.scrollIntoView({behavior: 'smooth', block: 'center'});
+    if (id === 'sac-ativo' && window.consultarSacAtivoFirebase) {
+      window.consultarSacAtivoFirebase();
+    }
+  }
+  // Esconde barra de pesquisa ao alternar
+  var barra = document.getElementById('sacAtivoPesquisaBar');
+  if (barra) barra.style.display = 'none';
+}
+
+// Mostra modal/página própria ao clicar em Ver SAC Ativo
+
+// Corrigido: mostrar painel inline ao clicar em 'Ver SAC Ativo'
+document.getElementById('btnConsultarSacAtivo').onclick = function() {
+  var painel = document.getElementById('painelSacAtivo');
+  if (painel) {
+    painel.style.display = 'block';
+    window.consultarSacAtivoFirebase();
+    setTimeout(()=>{
+      document.getElementById('inputBuscaSacAtivo').focus();
+    }, 200);
+  }
+};
+
+// Busca filtrada no Firebase ao clicar em Buscar
+document.getElementById('btnBuscarSacAtivo').onclick = function() {
+  var termo = document.getElementById('inputBuscaSacAtivo').value.trim().toLowerCase();
+  window.consultarSacAtivoFirebase(termo);
+};
+
+// Busca ao pressionar Enter
+document.getElementById('inputBuscaSacAtivo').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    document.getElementById('btnBuscarSacAtivo').click();
+  }
+});
+</script>
+          <!-- Botão 'Ver Formulários Insatisfeitos' removido conforme solicitado -->
+        </div>
+        <div id="resultadoConsultaSac" style="display:none;margin-top:18px;padding:12px;background:#f5f5f5;border-radius:8px;box-shadow:0 2px 8px #1976d222;">
+        </div>
+        <script>
+
+          function mostrarImagemGrande(src, tipo) {
+            var modal = document.getElementById('modalImagemSac');
+            var conteudo = document.getElementById('modalConteudoSac');
+            conteudo.innerHTML = '<img src="' + src + '" alt="' + tipo + '" style="max-width:480px;max-height:80vh;border-radius:12px;box-shadow:0 2px 12px #0004;">' +
+              '<p style="margin-top:12px;font-size:18px;font-weight:bold;">' + tipo + '</p>' +
+              '<button onclick="document.getElementById(\'modalImagemSac\').style.display=\'none\'" style="margin-top:18px;padding:8px 24px;background:#1976d2;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:16px;">Fechar</button>';
+            modal.style.display = 'flex';
+          }
+
+          function mostrarFormularioSac(formulario) {
+            // Oculta ambos os formulários
+            document.getElementById('formSacAtivo').style.display = 'none';
+            document.getElementById('formInsatisfeito').style.display = 'none';
+            if(formulario.tipo === 'SAC Ativo') {
+              document.getElementById('formSacAtivo').style.display = 'block';
+              document.getElementById('inputEmpresaSacAtivo').value = formulario.cliente;
+              document.getElementById('inputResponsavelSacAtivo').value = formulario.nome;
+            } else {
+              document.getElementById('formInsatisfeito').style.display = 'block';
+            }
+          }
+        </script>
+          <div id="sac-ativo" class="hidden" style="margin-top:18px;max-width:900px;background:#fff;border:2px solid #1976d2;border-radius:10px;padding:18px;box-shadow:0 2px 12px #1976d222;">
+  <!-- Lista de miniaturas dos formulários SAC Ativo salvos -->
+  <div id="listaSacAtivo" style="margin:18px 0 0 0;"></div>
+            <h3 style="color:#1976d2;text-align:center;margin-bottom:8px;font-size:22px;font-family:'Segoe UI',Arial,sans-serif;letter-spacing:1px;">Pesquisa de Satisfação - SAC Ativo</h3>
+            <div style="margin-bottom:10px;">
+              <b>Nota informada na pesquisa:</b>
+              <form id="formPesquisaSACAtivo" onsubmit="event.preventDefault(); registrarSacAtivoPesquisa();" style="margin:0;padding:0;">
+                <fieldset style="border:2px solid #1976d2;border-radius:10px;padding:18px;margin-bottom:18px;">
+                  <legend style="font-size:22px;color:#1976d2;font-weight:bold;padding:0 12px;">Pesquisa de Satisfação - SAC Ativo</legend>
+                  <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
+                    <div style="flex:1;min-width:220px;">
+                      <label>Nome da empresa do cliente:</label>
+                      <input type="text" name="empresaSacAtivo" style="width:100%;margin-bottom:4px;">
+                    </div>
+                    <div style="flex:1;min-width:220px;">
+                      <label>Telefone de contato do cliente:</label>
+                      <input type="text" name="telefoneSacAtivo" style="width:100%;margin-bottom:4px;">
+                    </div>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
+                    <div style="flex:2;min-width:220px;">
+                      <label>Endereço completo:</label>
+                      <input type="text" name="enderecoSacAtivo" style="width:100%;margin-bottom:4px;">
+                    </div>
+                    <div style="flex:1;min-width:180px;">
+                      <label>Data da pesquisa inicial:</label>
+                      <input type="date" name="dataPesquisaSacAtivo" style="width:100%;margin-bottom:4px;">
+                    </div>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
+                    <div style="flex:2;min-width:220px;">
+                      <label>Nome do cliente que respondeu a pesquisa:</label>
+                      <input type="text" name="nomeClienteSacAtivo" style="width:100%;margin-bottom:4px;">
+                    </div>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
+                    <div style="flex:1;min-width:120px;">
+                      <label>Perfil do cliente:</label>
+                      <select name="perfilClienteSacAtivo" style="width:100%;margin-bottom:4px;">
+                        <option value="VIP">VIP</option>
+                        <option value="INTERMED.">INTERMED.</option>
+                        <option value="POUCA COMPRA">POUCA COMPRA</option>
+                      </select>
+                    </div>
+                    <div style="flex:1;min-width:120px;">
+                      <label>Pontuação:</label>
+                      <input type="text" name="pontuacaoSacAtivo" style="width:100%;margin-bottom:4px;">
+                    </div>
+                    <div style="flex:1;min-width:120px;">
+                      <label>Carteira:</label>
+                      <input type="text" name="carteiraSacAtivo" style="width:100%;margin-bottom:4px;">
+                    </div>
+                    <div style="flex:1;min-width:120px;">
+                      <label>MAXIFORCE</label>
+                      <input type="checkbox" name="maxiforceSacAtivo" style="margin-top:8px;">
+                      <label style="margin-left:8px;">PYRAMID</label>
+                      <input type="checkbox" name="pyramidSacAtivo" style="margin-top:8px;">
+                    </div>
+                  </div>
+                </fieldset>
+                <div style="background:#e3f2fd;border-radius:6px;padding:10px 12px;margin-bottom:10px;">
+                  <b>ORIENTAÇÕES PARA REALIZAR A PESQUISA</b>
+                  <p style="font-size:14px;margin:4px 0 0 0;">No contato inicial junto ao Cliente, seguir a abordagem explanada: Bom dia, meu nome é ... e sou do Grupo Pyramid ...</p>
+                  <p style="font-size:14px;margin:4px 0 0 0;">... (texto completo conforme modelo impresso) ...</p>
+                </div>
+                <div style="background:#f5f5f5;border-radius:6px;padding:10px 12px;margin-bottom:10px;">
+                  <b style="font-size:15px;">CRITÉRIOS DAS RESPOSTAS PARA ORIENTAR O CLIENTE</b>
+                  <div style="display:flex;align-items:center;gap:16px;margin-top:8px;">
+                    <span style="font-size:22px;">😡 1</span>
+                    <span style="font-size:22px;">😕 2</span>
+                    <span style="font-size:22px;">😐 3</span>
+                    <span style="font-size:22px;">🙂 4</span>
+                    <span style="font-size:22px;">😃 5</span>
+                  </div>
+                  <p style="font-size:14px;margin:4px 0 0 0;">Em uma escala (1 a 5), sendo (1) Pouco Satisfeito e (5) Muito Satisfeito, favor informar a nota para as perguntas abaixo:</p>
+                </div>
+                <table style="width:100%;border-collapse:collapse;margin-bottom:18px;">
+                  <tr style="background:#e3eaf2;font-weight:bold;text-align:center;">
+                    <td style="width:44%;font-size:16px;border:2px solid #1976d2;">Pergunta</td>
+                    <td style="width:11%;border:2px solid #1976d2;">1<br>😡</td>
+                    <td style="width:11%;border:2px solid #1976d2;">2<br>😕</td>
+                    <td style="width:11%;border:2px solid #1976d2;">3<br>😐</td>
+                    <td style="width:11%;border:2px solid #1976d2;">4<br>🙂</td>
+                    <td style="width:11%;border:2px solid #1976d2;">5<br>😃</td>
+                  </tr>
+                  <tr>
+                    <td>1) Referente ao atendimento do Depto de Vendas, qual o seu nível de satisfação?</td>
+                    <td style="text-align:center;"><input type="radio" name="q1" value="1"></td>
+                    <td style="text-align:center;"><input type="radio" name="q1" value="2"></td>
+                    <td style="text-align:center;"><input type="radio" name="q1" value="3"></td>
+                    <td style="text-align:center;"><input type="radio" name="q1" value="4"></td>
+                    <td style="text-align:center;"><input type="radio" name="q1" value="5"></td>
+                  </tr>
+                  <tr>
+                    <td>2) Referente ao Prazo de Entrega dos produtos adquiridos, qual o seu nível de satisfação?</td>
+                    <td style="text-align:center;"><input type="radio" name="q2" value="1"></td>
+                    <td style="text-align:center;"><input type="radio" name="q2" value="2"></td>
+                    <td style="text-align:center;"><input type="radio" name="q2" value="3"></td>
+                    <td style="text-align:center;"><input type="radio" name="q2" value="4"></td>
+                    <td style="text-align:center;"><input type="radio" name="q2" value="5"></td>
+                  </tr>
+                  <tr>
+                    <td>3) Referente à Qualidade dos Produtos, qual o seu nível de satisfação?</td>
+                    <td style="text-align:center;"><input type="radio" name="q3" value="1"></td>
+                    <td style="text-align:center;"><input type="radio" name="q3" value="2"></td>
+                    <td style="text-align:center;"><input type="radio" name="q3" value="3"></td>
+                    <td style="text-align:center;"><input type="radio" name="q3" value="4"></td>
+                    <td style="text-align:center;"><input type="radio" name="q3" value="5"></td>
+                  </tr>
+                  <tr>
+                    <td>4) Referente ao Suporte do Pós Venda, qual o seu nível de satisfação?</td>
+                    <td style="text-align:center;"><input type="radio" name="q4" value="1"></td>
+                    <td style="text-align:center;"><input type="radio" name="q4" value="2"></td>
+                    <td style="text-align:center;"><input type="radio" name="q4" value="3"></td>
+                    <td style="text-align:center;"><input type="radio" name="q4" value="4"></td>
+                    <td style="text-align:center;"><input type="radio" name="q4" value="5"></td>
+                  </tr>
+                  <tr>
+                    <td>5) Referente ao atendimento do Depto Financeiro (Negociações / Emissão dos Boletos....etc.), qual o seu nível de satisfação?</td>
+                    <td style="text-align:center;"><input type="radio" name="q5" value="1"></td>
+                    <td style="text-align:center;"><input type="radio" name="q5" value="2"></td>
+                    <td style="text-align:center;"><input type="radio" name="q5" value="3"></td>
+                    <td style="text-align:center;"><input type="radio" name="q5" value="4"></td>
+                    <td style="text-align:center;"><input type="radio" name="q5" value="5"></td>
+                  </tr>
+                  <tr>
+                    <td>6) Qual o seu nível de satisfação com a relação ao custo-benefício dos produtos adquiridos?</td>
+                    <td style="text-align:center;"><input type="radio" name="q6" value="1"></td>
+                    <td style="text-align:center;"><input type="radio" name="q6" value="2"></td>
+                    <td style="text-align:center;"><input type="radio" name="q6" value="3"></td>
+                    <td style="text-align:center;"><input type="radio" name="q6" value="4"></td>
+                    <td style="text-align:center;"><input type="radio" name="q6" value="5"></td>
+                  </tr>
+                  <tr>
+                    <td>7) Qual o seu nível de satisfação com a experiência de compra junto à nossa Empresa?</td>
+                    <td style="text-align:center;"><input type="radio" name="q7" value="1"></td>
+                    <td style="text-align:center;"><input type="radio" name="q7" value="2"></td>
+                    <td style="text-align:center;"><input type="radio" name="q7" value="3"></td>
+                    <td style="text-align:center;"><input type="radio" name="q7" value="4"></td>
+                    <td style="text-align:center;"><input type="radio" name="q7" value="5"></td>
+                  </tr>
+                </table>
+                <div style="margin-bottom:12px;">
+                  <label style="font-weight:bold;">PERGUNTA COMPLEMENTAR:</label>
+                  <textarea name="infoComplementarSacAtivo" rows="3" style="width:100%;margin-top:4px;"></textarea>
+                </div>
+                <button id="btnPesquisaSacAtivo" type="submit" style="background:#43a047;color:#fff;font-weight:bold;width:100%;margin-top:8px;transition:background 0.2s;">Finalizar</button>
+                <div id="loadingSacAtivo" style="display:none;text-align:center;margin-top:8px;color:#1976d2;font-weight:bold;">Enviando...</div>
+              </form>
+            </div>
+          </div>
+            <div style="text-align:right;margin-top:18px;">
+              <!-- Botão 'Finalizar' removido conforme solicitado -->
+            </div>
+            <div id="formInsatisfeito" class="hidden" style="margin-top:18px;max-width:900px;background:#fff;border:2px solid #e53935;border-radius:10px;padding:18px;box-shadow:0 2px 12px #e5393522;">
+              <form id="formInsatisfeitoForm" onsubmit="event.preventDefault(); registrarInsatisfeitoForm();" style="margin:0;padding:0;">
+                <fieldset style="border:2px solid #e53935;border-radius:10px;padding:18px;margin-bottom:18px;">
+                  <legend style="font-size:22px;color:#e53935;font-weight:bold;padding:0 12px;">Formulário para Análise da Nota Insatisfatória</legend>
+                  <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
+                    <div style="flex:1;min-width:220px;">
+                      <label>Nome da empresa do cliente:</label>
+                      <input type="text" name="empresaInsatisfeito" style="width:100%;margin-bottom:4px;">
+                    </div>
+                    <div style="flex:1;min-width:220px;">
+                      <label>Telefone de contato do cliente:</label>
+                      <input type="text" name="telefoneInsatisfeito" style="width:100%;margin-bottom:4px;">
+                    </div>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
+                    <div style="flex:2;min-width:220px;">
+                      <label>Endereço completo:</label>
+                      <input type="text" name="enderecoInsatisfeito" style="width:100%;margin-bottom:4px;">
+                    </div>
+                    <div style="flex:1;min-width:180px;">
+                      <label>Data da pesquisa inicial:</label>
+                      <input type="date" name="dataPesquisaInsatisfeito" style="width:100%;margin-bottom:4px;">
+                    </div>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
+                    <div style="flex:2;min-width:220px;">
+                      <label>Nome do cliente que respondeu a pesquisa:</label>
+                      <input type="text" name="nomeClienteInsatisfeito" style="width:100%;margin-bottom:4px;">
+                    </div>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
+                    <div style="flex:2;min-width:220px;">
+                      <label>Nome do contato da empresa (MAXIFORCE ou PYRAMID):</label>
+                      <input type="text" name="contatoEmpresaInsatisfeito" style="width:100%;margin-bottom:4px;">
+                    </div>
+                    <div style="flex:1;min-width:120px;">
+                      <label>Data:</label>
+                      <input type="date" name="dataContatoInsatisfeito" style="width:100%;margin-bottom:4px;">
+                    </div>
+                    <div style="flex:1;min-width:80px;display:flex;align-items:center;gap:8px;">
+                      <label>MX</label>
+                      <input type="checkbox" name="mxInsatisfeito">
+                      <label>PY</label>
+                      <input type="checkbox" name="pyInsatisfeito">
+                    </div>
+                  </div>
+                </fieldset>
+                <div style="background:#e3f2fd;border-radius:6px;padding:10px 12px;margin-bottom:10px;">
+                  <b>Orientações para o processo:</b>
+                  <p style="font-size:14px;margin:4px 0 0 0;">Quando o SAC PMD entra em contato com o Cliente para realizar a pesquisa de satisfação via SAC Ativo, por algum motivo (o Cliente detalhou ou não), foi atribuída nota insatisfatória para parte do setor (amarela=3) ou vermelha=2/1) vide pesquisa em anexo. Objetivando a plenitude da satisfação do Cliente, deve-se entrar em contato com o Cliente novamente para checar a insatisfação ou oportunidade de melhoria, fazer o feed back objetivando proporcionar acolhimento em relação à reclamação ou nota baixa informada. Todo este processo, deve ser registrado no campo abaixo: <b>Detalhar o Contato com o Cliente</b>.</p>
+                </div>
+                <div style="background:#f5f5f5;border-radius:6px;padding:10px 12px;margin-bottom:10px;">
+                  <b style="font-size:15px;">CRITÉRIOS DAS RESPOSTAS DO CLIENTE</b>
+                  <div style="display:flex;align-items:center;gap:16px;margin-top:8px;">
+                    <span style="font-size:22px;">😡 1<br><span style='font-size:12px;'>POUCO SATISFEITO</span></span>
+                    <span style="font-size:22px;">😕 2<br><span style='font-size:12px;'>BAIXA SATISFAÇÃO</span></span>
+                    <span style="font-size:22px;">😐 3<br><span style='font-size:12px;'>REGULAR SATISFAÇÃO</span></span>
+                    <span style="font-size:22px;">🙂 4<br><span style='font-size:12px;'>SATISFEITO</span></span>
+                    <span style="font-size:22px;">😃 5<br><span style='font-size:12px;'>MUITO SATISFEITO</span></span>
+                  </div>
+                  <p style="font-size:14px;margin:4px 0 0 0;">Em uma escala (1 a 5), sendo (1) Pouco Satisfeito e (5) Muito Satisfeito, favor informar a nota para as perguntas abaixo:</p>
+                </div>
+                <table style="width:100%;border-collapse:collapse;margin-bottom:18px;">
+                  <tr style="background:#e3eaf2;font-weight:bold;text-align:center;">
+                    <td style="width:44%;font-size:16px;border:2px solid #e53935;">Pergunta</td>
+                    <td style="width:11%;border:2px solid #e53935;">1<br>😡</td>
+                    <td style="width:11%;border:2px solid #e53935;">2<br>😕</td>
+                    <td style="width:11%;border:2px solid #e53935;">3<br>😐</td>
+                    <td style="width:11%;border:2px solid #e53935;">4<br>🙂</td>
+                    <td style="width:11%;border:2px solid #e53935;">5<br>😃</td>
+                  </tr>
+                  <tr>
+                    <td>1) Referente ao atendimento do Depto de Vendas, qual o seu nível de satisfação?</td>
+                    <td style="text-align:center;"><input type="radio" name="q1i" value="1"></td>
+                    <td style="text-align:center;"><input type="radio" name="q1i" value="2"></td>
+                    <td style="text-align:center;"><input type="radio" name="q1i" value="3"></td>
+                    <td style="text-align:center;"><input type="radio" name="q1i" value="4"></td>
+                    <td style="text-align:center;"><input type="radio" name="q1i" value="5"></td>
+                  </tr>
+                  <tr>
+                    <td>2) Referente ao Prazo de Entrega dos produtos, qual o seu nível de satisfação?</td>
+                    <td style="text-align:center;"><input type="radio" name="q2i" value="1"></td>
+                    <td style="text-align:center;"><input type="radio" name="q2i" value="2"></td>
+                    <td style="text-align:center;"><input type="radio" name="q2i" value="3"></td>
+                    <td style="text-align:center;"><input type="radio" name="q2i" value="4"></td>
+                    <td style="text-align:center;"><input type="radio" name="q2i" value="5"></td>
+                  </tr>
+                  <tr>
+                    <td>3) Referente à Qualidade dos Produtos, qual o seu nível de satisfação?</td>
+                    <td style="text-align:center;"><input type="radio" name="q3i" value="1"></td>
+                    <td style="text-align:center;"><input type="radio" name="q3i" value="2"></td>
+                    <td style="text-align:center;"><input type="radio" name="q3i" value="3"></td>
+                    <td style="text-align:center;"><input type="radio" name="q3i" value="4"></td>
+                    <td style="text-align:center;"><input type="radio" name="q3i" value="5"></td>
+                  </tr>
+                  <tr>
+                    <td>4) Referente ao Suporte do Pós Venda, qual o seu nível de satisfação?</td>
+                    <td style="text-align:center;"><input type="radio" name="q4i" value="1"></td>
+                    <td style="text-align:center;"><input type="radio" name="q4i" value="2"></td>
+                    <td style="text-align:center;"><input type="radio" name="q4i" value="3"></td>
+                    <td style="text-align:center;"><input type="radio" name="q4i" value="4"></td>
+                    <td style="text-align:center;"><input type="radio" name="q4i" value="5"></td>
+                  </tr>
+                  <tr>
+                    <td>5) Referente ao atendimento do Depto Financeiro (Negociações / Emissão dos Boletos....etc.), qual o seu nível de satisfação?</td>
+                    <td style="text-align:center;"><input type="radio" name="q5i" value="1"></td>
+                    <td style="text-align:center;"><input type="radio" name="q5i" value="2"></td>
+                    <td style="text-align:center;"><input type="radio" name="q5i" value="3"></td>
+                    <td style="text-align:center;"><input type="radio" name="q5i" value="4"></td>
+                    <td style="text-align:center;"><input type="radio" name="q5i" value="5"></td>
+                  </tr>
+                  <tr>
+                    <td>6) Qual o seu nível de satisfação com a relação ao custo-benefício dos produtos adquiridos?</td>
+                    <td style="text-align:center;"><input type="radio" name="q6i" value="1"></td>
+                    <td style="text-align:center;"><input type="radio" name="q6i" value="2"></td>
+                    <td style="text-align:center;"><input type="radio" name="q6i" value="3"></td>
+                    <td style="text-align:center;"><input type="radio" name="q6i" value="4"></td>
+                    <td style="text-align:center;"><input type="radio" name="q6i" value="5"></td>
+                  </tr>
+                  <tr>
+                    <td>7) Qual o seu nível de satisfação com a experiência de compra junto à nossa Empresa?</td>
+                    <td style="text-align:center;"><input type="radio" name="q7i" value="1"></td>
+                    <td style="text-align:center;"><input type="radio" name="q7i" value="2"></td>
+                    <td style="text-align:center;"><input type="radio" name="q7i" value="3"></td>
+                    <td style="text-align:center;"><input type="radio" name="q7i" value="4"></td>
+                    <td style="text-align:center;"><input type="radio" name="q7i" value="5"></td>
+                  </tr>
+                </table>
+                <div style="margin-bottom:12px;">
+                  <label style="font-weight:bold;">DETALHAR O CONTATO COM O CLIENTE, SOLUÇÃO E FEEDBACK ALINHADOS / OUTROS:</label>
+                  <textarea name="detalheContatoInsatisfeito" rows="3" style="width:100%;margin-top:4px;"></textarea>
+                </div>
+                <div style="display:flex;align-items:center;gap:24px;margin-bottom:12px;">
+                  <div style="flex:1;min-width:220px;">
+                    <label>A disposição do contato com o Cliente foi concluída de forma satisfatória?</label><br>
+                    <input type="radio" name="disposicaoSatisfatoria" value="sim"> SIM
+                    <input type="radio" name="disposicaoSatisfatoria" value="nao" style="margin-left:18px;"> NÃO
+                  </div>
+                  <div style="flex:1;min-width:180px;">
+                    <label>Data do Encerramento do Processo:</label>
+                    <input type="date" name="dataEncerramentoProcesso" style="width:100%;margin-bottom:4px;">
+                  </div>
+                </div>
+                <div id="loadingInsatisfeito" style="display:none;text-align:center;margin-top:8px;color:#e53935;font-weight:bold;">Enviando...</div>
+                <div style="text-align:center;margin-top:18px;">
+                  <button id="btnFinalizarInsatisfeito" type="submit" style="background:#43a047;color:#fff;font-weight:bold;padding:10px 32px;border:none;border-radius:8px;box-shadow:0 2px 8px #1976d222;cursor:pointer;font-size:18px;">Finalizar e Salvar</button>
+                  <div id="mensagemSalvarInsatisfeito" style="margin-top:10px;"></div>
+                </div>
+              </form>
+            </div>
+            <script>
+              // Código do botão Notas Insatisfatórias removido
+            </script>
+            <style>
+              .csat-box {
+                width: 28px;
+                height: 28px;
+                border: 2px solid #1976d2;
+                border-radius: 6px;
+                background: #fff;
+                display: inline-block;
+                vertical-align: middle;
+                margin-left: 2px;
+                transition: box-shadow 0.2s, border-color 0.2s;
+              }
+              input[type="radio"]:checked + .csat-box {
+                box-shadow: 0 0 0 3px #43a04744;
+                border-color: #43a047;
+                background: #e8f5e9;
+              }
+              #btnPesquisaSacAtivo {
+                background: linear-gradient(90deg,#43a047 60%,#388e3c 100%);
+                box-shadow: 0 2px 8px #0002;
+                border-radius: 6px;
+                font-size: 17px;
+                letter-spacing: 0.5px;
+                border: none;
+                transition: background 0.2s, box-shadow 0.2s;
+              }
+              #btnPesquisaSacAtivo:active {
+                background: linear-gradient(90deg,#388e3c 60%,#43a047 100%);
+                box-shadow: 0 1px 4px #0002;
+              }
+            </style>
+          </form>
+          <div id="mensagemSacAtivo" style="margin-top:10px;"></div>
+          <script>
+            function registrarSacAtivoPesquisa() {
+              const btn = document.getElementById('btnPesquisaSacAtivo');
+              const loading = document.getElementById('loadingSacAtivo');
+              btn.disabled = true;
+              btn.style.background = '#bdbdbd';
+              loading.style.display = 'block';
+              setTimeout(() => {
+                btn.disabled = false;
+                btn.style.background = '#43a047';
+                loading.style.display = 'none';
+                document.getElementById('mensagemSacAtivo').innerHTML = '<span style="color:#43a047;font-weight:bold;font-size:16px;">Pesquisa registrada com sucesso!</span>';
+                document.getElementById('formPesquisaSACAtivo').reset();
+                setTimeout(()=>{
+                  document.getElementById('mensagemSacAtivo').innerHTML = '';
+                }, 3500);
+              }, 1800);
+            }
+          </script>
+        </div>
+        <div id="sac-receptivo" class="hidden">
+          <!-- SAC Receptivo removido conforme solicitado -->
+        </div>
+      </div>
+      <div id="modulo-conserto" class="card hidden">
+        <h2 style="margin-top:0;">Conserto</h2>
+        <div style="margin-bottom:16px;display:flex;gap:12px;">
+          <!-- Botão verde Registrar removido -->
+          <button onclick="mostrarSubpasta('consulta-conserto')" style="background:#1976d2;color:#fff;font-weight:bold;padding:8px 18px;border:none;border-radius:6px;box-shadow:0 2px 8px #0002;cursor:pointer;">Consultar</button>
+        </div>
+        <div id="registro-conserto" class="hidden">
+          <h3>Registrar Conserto 🛠️</h3>
+          <form onsubmit="event.preventDefault(); registrarConsertoAcao();">
+            <label>Produto:</label>
+            <input type="text" id="produtoConserto" required>
+            <label>Descrição do Defeito:</label>
+            <input type="text" id="defeitoConserto" required>
+            <!-- Botão verde Registrar removido -->
+          </form>
+          <div id="mensagemConserto" style="margin-top:10px;"></div>
+        </div>
+        <div id="consulta-conserto" class="hidden">
+          <h3>Consulta de Consertos 🔎</h3>
+          <input type="text" id="buscaConserto" placeholder="Buscar conserto..." oninput="filtrarConsertos()" style="margin-bottom:8px;">
+          <button onclick="consultarConsertosAcao()" style="background:#1976d2;color:#fff;">Consultar</button>
+          <table id="tabelaConsertos" style="width:100%;border-collapse:collapse;background:#fff;border-radius:10px;box-shadow:0 2px 12px #1976d222;overflow:hidden;margin-top:12px;">
+            <thead style="background:#1976d2;color:#fff;">
+              <tr>
+                <th style="padding:8px;border:none;">ID</th>
+                <th style="padding:8px;border:none;">Empresa</th>
+                <th style="padding:8px;border:none;">Produto</th>
+                <th style="padding:8px;border:none;">Data Entrada</th>
+                <th style="padding:8px;border:none;">Status</th>
+                <th style="padding:8px;border:none;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="corpoTabelaConsertos">
+              <tr>
+                <td style="padding:8px;">001</td>
+                <td style="padding:8px;">Empresa ABC</td>
+                <td style="padding:8px;">Motor X</td>
+                <td style="padding:8px;">12/09/2025</td>
+                <td style="padding:8px;">Em análise</td>
+                <td style="padding:8px;"><!-- Botão verde Detalhes removido --></td>
+              </tr>
+              <tr>
+                <td style="padding:8px;">002</td>
+                <td style="padding:8px;">Empresa XYZ</td>
+                <td style="padding:8px;">Painel Y</td>
+                <td style="padding:8px;">10/09/2025</td>
+                <td style="padding:8px;">Concluído</td>
+                <td style="padding:8px;"><button style="background:#1976d2;color:#fff;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;">Detalhes</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      </main>
+  <footer class="footer footer-fixa">&copy; 2025 Doudge Pós-Vendas. Todos os direitos reservados.</footer>
+<style>
+.footer-fixa {
+  width: 100vw;
+  margin: 38px 0 0 0;
+  border-radius: 0;
+  background: linear-gradient(90deg, #2196f3 60%, #1976d2 100%);
+  color: #fff;
+  font-weight: 500;
+  font-size: 1.12em;
+  text-align: center;
+  padding: 20px 0 18px 0;
+  box-shadow: 0 -2px 18px #1976d233, 0 1.5px 0 #fff8 inset;
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+  transition: box-shadow 0.22s, background 0.22s, border-radius 0.22s;
+  min-height: 40px;
+  overflow: hidden;
+  border: none;
+}
+</style>
+    </div>
+  </div>
+  <!-- Faixa verde residual removida do rodapé -->
+  <!-- Faixa verde removida manualmente -->
+  <script type="module">
+    import { cadastrarCliente } from './src/clientes/cadastro/index.js';
+    import { consultarClientes } from './src/clientes/consulta/index.js';
+    import { registrarAtendimento } from './src/atendimentos/registro/index.js';
+    import { acompanharAtendimento } from './src/atendimentos/acompanhamento/index.js';
+    import { gerarRelatorio } from './src/relatorios/geracao/index.js';
+    import { exportarRelatorio } from './src/relatorios/exportacao/index.js';
+    import { cadastrarProduto } from './src/produtos/cadastro/index.js';
+    import { consultarProdutos } from './src/produtos/consulta/index.js';
+
+    window.mostrarModulo = function(modulo, el) {
+      // Oculta todos os módulos existentes
+      const modulos = [
+        'clientes',
+        'atendimentos',
+        'relatorios',
+        'reclamacoes',
+        'sac',
+        'conserto'
+      ];
+      modulos.forEach(m => {
+        const el = document.getElementById('modulo-' + m);
+        if (el) el.classList.add('hidden');
+      });
+      // Mostra o módulo selecionado ou painel de configurações
+      var painelConfig = document.getElementById('painel-configuracoes');
+      if (painelConfig) {
+        painelConfig.style.display = 'none';
+        painelConfig.classList.remove('hidden');
+      }
+      if (modulo === 'configuracoes') {
+        // Esconde todos os módulos
+        modulos.forEach(m => {
+          const el = document.getElementById('modulo-' + m);
+          if (el) el.classList.add('hidden');
+        });
+        // Exibe painel de configurações
+        if (painelConfig) {
+          painelConfig.style.display = 'block';
+          painelConfig.classList.remove('hidden');
+        }
+        // Preenche dados do usuário logado (simulação)
+        var nome = localStorage.getItem('nomeUsuario') || 'Usuário';
+        var email = window._usuarioLogado && window._usuarioLogado.email ? window._usuarioLogado.email : 'email@exemplo.com';
+        var avatar = window._usuarioLogado && window._usuarioLogado.photoURL ? window._usuarioLogado.photoURL : painelConfig.querySelector('#avatarUsuario').src;
+        painelConfig.querySelector('#nomeUsuarioPainel').textContent = nome;
+        painelConfig.querySelector('#emailUsuarioPainel').textContent = email;
+        painelConfig.querySelector('#avatarUsuario').src = avatar;
+      } else {
+        const moduloEl = document.getElementById('modulo-' + modulo);
+        if (moduloEl) {
+          moduloEl.classList.remove('hidden');
+        }
+      }
+      // Destaca o menu ativo
+      document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+      if (el && el.classList) el.classList.add('active');
+      else {
+        // Se chamado sem elemento, ativa o primeiro menu
+        document.getElementById('menu-clientes').classList.add('active');
+      }
+      // Oculta todas as subpastas ao trocar de módulo
+      const subpastas = [
+        'cadastro-clientes','consulta-clientes',
+        'registro-atendimentos','acompanhamento-atendimentos',
+        'geracao-relatorios','exportacao-relatorios',
+        'registro-reclamacoes','consulta-reclamacoes',
+        'sac-ativo','sac-receptivo',
+        'registro-conserto','consulta-conserto'
+      ];
+      subpastas.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+    }
+
+    window.mostrarSubpasta = function(subpasta) {
+      // Oculta todas as subpastas do módulo atual
+      const subpastas = [
+        'cadastro-clientes','consulta-clientes',
+        'registro-atendimentos','acompanhamento-atendimentos',
+        'geracao-relatorios','exportacao-relatorios',
+        'registro-reclamacoes','consulta-reclamacoes',
+        'sac-ativo','sac-receptivo',
+        'registro-conserto','consulta-conserto'
+      ];
+      subpastas.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+      // Mostra a subpasta selecionada
+      const subpastaEl = document.getElementById(subpasta);
+      if (subpastaEl) subpastaEl.classList.remove('hidden');
+    }
+    // Ativa o menu Clientes ao carregar
+    window.addEventListener('DOMContentLoaded', function() {
+      mostrarModulo('clientes', document.getElementById('menu-clientes'));
+    });
+  </script>
+</div>
+<script>
+// Oculta o sistema até login
+window.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('sistema-pos-vendas').style.display = 'none';
+});
+</script>
+  <script src="renderer.js"></script>
+</body>
+<script src="renderer.js"></script>
+</html>
+                <!-- Linha de emojis removida -->
+              </div>
+            </div>
+            <!-- Tabela de perguntas de satisfação removida da página inicial -->
+            <!-- Bloco de Notas Insatisfatórias e Pergunta complementar removido -->
+            <button id="btnPesquisaSacAtivo" type="submit" style="background:#43a047;color:#fff;font-weight:bold;width:100%;margin-top:8px;transition:background 0.2s;">Registrar Pesquisa</button>
+            <div id="loadingSacAtivo" style="display:none;text-align:center;margin-top:8px;color:#1976d2;font-weight:bold;">Enviando...</div>
+            <!-- Script do botão Notas Insatisfatórias removido -->
+            <style>
+              .csat-box {
+                width: 28px;
+                height: 28px;
+                border: 2px solid #1976d2;
+                border-radius: 6px;
+                background: #fff;
+                display: inline-block;
+                vertical-align: middle;
+                margin-left: 2px;
+                transition: box-shadow 0.2s, border-color 0.2s;
+              }
+              input[type="radio"]:checked + .csat-box {
+                box-shadow: 0 0 0 3px #43a04744;
+                border-color: #43a047;
+                background: #e8f5e9;
+              }
+              #btnPesquisaSacAtivo {
+                background: linear-gradient(90deg,#43a047 60%,#388e3c 100%);
+                box-shadow: 0 2px 8px #0002;
+                border-radius: 6px;
+                font-size: 17px;
+                letter-spacing: 0.5px;
+                border: none;
+                transition: background 0.2s, box-shadow 0.2s;
+              }
+              #btnPesquisaSacAtivo:active {
+                background: linear-gradient(90deg,#388e3c 60%,#43a047 100%);
+                box-shadow: 0 1px 4px #0002;
+              }
+            </style>
+          </form>
+          <div id="mensagemSacAtivo" style="margin-top:10px;"></div>
+          <script>
+            function registrarSacAtivoPesquisa() {
+              const btn = document.getElementById('btnPesquisaSacAtivo');
+              const loading = document.getElementById('loadingSacAtivo');
+              btn.disabled = true;
+              btn.style.background = '#bdbdbd';
+              loading.style.display = 'block';
+              setTimeout(() => {
+                btn.disabled = false;
+                btn.style.background = '#43a047';
+                loading.style.display = 'none';
+                document.getElementById('mensagemSacAtivo').innerHTML = '<span style="color:#43a047;font-weight:bold;font-size:16px;">Pesquisa registrada com sucesso!</span>';
+                document.getElementById('formPesquisaSACAtivo').reset();
+                setTimeout(()=>{
+                  document.getElementById('mensagemSacAtivo').innerHTML = '';
+                }, 3500);
+              }, 1800);
+            }
+          </script>
+        </div>
+        <div id="sac-receptivo" class="hidden">
+          <!-- SAC Receptivo removido conforme solicitado -->
+        </div>
+      </div>
+      <div id="modulo-conserto" class="card hidden">
+        <h2 style="margin-top:0;">Conserto</h2>
+        <div style="margin-bottom:16px;display:flex;gap:12px;">
+          <!-- Botão verde Registrar removido -->
+          <button onclick="mostrarSubpasta('consulta-conserto')" style="background:#1976d2;color:#fff;font-weight:bold;padding:8px 18px;border:none;border-radius:6px;box-shadow:0 2px 8px #0002;cursor:pointer;">Consultar</button>
+        </div>
+        <div id="registro-conserto" class="hidden">
+          <h3>Registrar Conserto 🛠️</h3>
+          <form onsubmit="event.preventDefault(); registrarConsertoAcao();">
+            <label>Produto:</label>
+            <input type="text" id="produtoConserto" required>
+            <label>Descrição do Defeito:</label>
+            <input type="text" id="defeitoConserto" required>
+            <!-- Botão verde Registrar removido -->
+          </form>
+          <div id="mensagemConserto" style="margin-top:10px;"></div>
+        </div>
+        <div id="consulta-conserto" class="hidden">
+          <h3>Consulta de Consertos 🔎</h3>
+          <input type="text" id="buscaConserto" placeholder="Buscar conserto..." oninput="filtrarConsertos()" style="margin-bottom:8px;">
+          <button onclick="consultarConsertosAcao()" style="background:#1976d2;color:#fff;">Consultar</button>
+          <table id="tabelaConsertos" style="width:100%;border-collapse:collapse;background:#fff;border-radius:10px;box-shadow:0 2px 12px #1976d222;overflow:hidden;margin-top:12px;">
+            <thead style="background:#1976d2;color:#fff;">
+              <tr>
+                <th style="padding:8px;border:none;">ID</th>
+                <th style="padding:8px;border:none;">Empresa</th>
+                <th style="padding:8px;border:none;">Produto</th>
+                <th style="padding:8px;border:none;">Data Entrada</th>
+                <th style="padding:8px;border:none;">Status</th>
+                <th style="padding:8px;border:none;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="corpoTabelaConsertos">
+              <tr>
+                <td style="padding:8px;">001</td>
+                <td style="padding:8px;">Empresa ABC</td>
+                <td style="padding:8px;">Motor X</td>
+                <td style="padding:8px;">12/09/2025</td>
+                <td style="padding:8px;">Em análise</td>
+                <td style="padding:8px;"><!-- Botão verde Detalhes removido --></td>
+              </tr>
+              <tr>
+                <td style="padding:8px;">002</td>
+                <td style="padding:8px;">Empresa XYZ</td>
+                <td style="padding:8px;">Painel Y</td>
+                <td style="padding:8px;">10/09/2025</td>
+                <td style="padding:8px;">Concluído</td>
+                <td style="padding:8px;"><button style="background:#1976d2;color:#fff;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;">Detalhes</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script type="module">
+    import { cadastrarCliente } from './src/clientes/cadastro/index.js';
+    import { consultarClientes } from './src/clientes/consulta/index.js';
+    import { registrarAtendimento } from './src/atendimentos/registro/index.js';
+    import { acompanharAtendimento } from './src/atendimentos/acompanhamento/index.js';
+    import { gerarRelatorio } from './src/relatorios/geracao/index.js';
+    import { exportarRelatorio } from './src/relatorios/exportacao/index.js';
+    import { cadastrarProduto } from './src/produtos/cadastro/index.js';
+    import { consultarProdutos } from './src/produtos/consulta/index.js';
+
+    window.mostrarModulo = function(modulo, el) {
+      // Sempre permite rolagem
+      document.body.classList.remove('no-scroll');
+      // Oculta todos os módulos existentes
+      const modulos = [
+        'clientes',
+        'atendimentos',
+        'relatorios',
+        'reclamacoes',
+        'sac',
+        'conserto'
+      ];
+      modulos.forEach(m => {
+        const el = document.getElementById('modulo-' + m);
+        if (el) el.classList.add('hidden');
+      });
+      // Mostra o módulo selecionado
+      const moduloEl = document.getElementById('modulo-' + modulo);
+      if (moduloEl) {
+        moduloEl.classList.remove('hidden');
+      }
+      // Oculta todas as subpastas ao trocar de módulo
+      const subpastas = [
+        'cadastro-clientes','consulta-clientes',
+        'registro-atendimentos','acompanhamento-atendimentos',
+        'geracao-relatorios','exportacao-relatorios',
+        'registro-reclamacoes','consulta-reclamacoes',
+        'sac-ativo','sac-receptivo',
+        'registro-conserto','consulta-conserto'
+      ];
+      subpastas.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+  // Se for o módulo conserto, NÃO mostra a subpasta consulta-conserto automaticamente
+  // Só mostra o menu inicial (Registrar/Consultar)
+    }
+
+    window.mostrarSubpasta = function(subpasta) {
+      // Oculta todas as subpastas do módulo atual
+      const subpastas = [
+        'cadastro-clientes','consulta-clientes',
+        'registro-atendimentos','acompanhamento-atendimentos',
+        'geracao-relatorios','exportacao-relatorios',
+        'registro-reclamacoes','consulta-reclamacoes',
+        'sac-ativo','sac-receptivo',
+        'registro-conserto','consulta-conserto'
+      ];
+      subpastas.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+      // Mostra a subpasta selecionada
+      const subpastaEl = document.getElementById(subpasta);
+      if (subpastaEl) subpastaEl.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>

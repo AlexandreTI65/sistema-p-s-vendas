@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build Electron Executable (Windows)",
+			"type": "shell",
+			"command": "npx electron-packager . SistemaPosVendas --platform=win32 --arch=x64 --out=dist --overwrite",
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}

@@ -1,0 +1,28 @@
+{
+	"name": "sistema-pos-vendas",
+	"version": "1.0.0",
+	"description": "Sistema de pós-vendas em Electron",
+	"main": "main.js",
+	"scripts": {
+		"start": "concurrently \"node auth-server.js\" \"electron .\"",
+		"postbuild": "node postbuild-copy-backend.js"
+	},
+	"author": "",
+	"license": "MIT",
+	"devDependencies": {
+		"electron": "^28.2.3"
+	},
+	"dependencies": {
+		"@azure/msal-node": "^3.8.0",
+		"concurrently": "^9.2.1",
+		"cors": "^2.8.5",
+		"dotenv": "^17.2.3",
+		"express": "^5.1.0",
+		"express-session": "^1.18.2",
+		"firebase-admin": "^13.5.0",
+		"googleapis": "^160.0.0",
+		"node-fetch": "^3.3.2",
+		"passport": "^0.7.0",
+		"passport-google-oauth20": "^2.0.0"
+	}
+}
